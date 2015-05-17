@@ -4,7 +4,7 @@ pyMultihash is a python implementation of the Multihash standard: https://github
 """
 
 import hashlib
-import base58
+from . import base58
 
 
 """
@@ -14,13 +14,12 @@ def int_to_byte_array(big_int):
     array = []
     while big_int > 1:
         array.append(big_int%256)
-        big_int/=256
-    print(array)
-    print(len(array))
+        big_int//=256
     return array
 
-def bytes_to_long(bytes):
-    return int( ''.join('{:02x}'.format(x) for x in bytes), 16)
+def bytes_to_long(bytestr):
+    assert(len(bytestr)>0)
+    return int( ''.join('{:02x}'.format(x) for x in bytestr), 16)
 
 
 """
@@ -31,8 +30,9 @@ def parseHash(hashstr):
     hashbytes = int_to_byte_array(hashint)
     if len(hashbytes) < 3:
         raise Exception("Multihash must be at least 3 bytes")
+
     hash_func_id = hashbytes[0]
-    hash_length = hashbytes[1]
+    hash_length = int(hashbytes[1])
     hash_contents = hashbytes[2:hash_length+2]
 
     return bytes_to_long(hash_contents)

@@ -7,7 +7,7 @@ class PeerInfo(object):
     """
     def __init__(self,hashid,addr):
         """
-            hashid is a byte string
+            hashid is a string encoded in multihash format
             addr is whatever the network module needs to connect
         """
         self.id = hashid
