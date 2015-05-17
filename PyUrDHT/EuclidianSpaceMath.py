@@ -4,7 +4,6 @@ import random
 
 def id_to_point(dim,id):
     id_long = MultiHash.parseHash(id)
-    print(id_long)
     random.seed(id_long)
     return tuple([random.random() for x in range(dim)])
 
