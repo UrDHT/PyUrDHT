@@ -101,9 +101,9 @@ class DHTLogic(object):
         self.maintenance_thread= DHTMaintenceWorker(self)
         return True
 
-    def join(self,peer):
+    def join(self,bootStraps):
         #seek for insertion point
-        found_peers = set((peer))
+        found_peers = set(bootStraps)
         best_parent = peer
         new_best = None
         while while new_best is not None and best_parent.id != new_best.id: #comparison on remoteids?
