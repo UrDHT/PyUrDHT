@@ -15,5 +15,6 @@ class Networking(object):
         pass
     def getPeers(self,remote):
         pass
-    def notify(self,remote):
+    def notify(self,remote,origin):
+        #returns True on success, False on Error
         pass

@@ -1,7 +1,6 @@
 """ base58 encoding / decoding functions """
 """Shamelessly stolen from https://gist.github.com/ianoxley/865912"""
-import unittest
- 
+
 alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 base_count = len(alphabet)
         
