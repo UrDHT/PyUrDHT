@@ -101,13 +101,13 @@ class DHTLogic(object):
         self.maintenance_thread= DHTMaintenceWorker(self)
         return True
 
-    def join(self,bootStraps):
+    def join(self,peer):
         #seek for insertion point
-        found_peers = set(bootStraps)
+        found_peers = set([peer])
         best_parent = peer
         new_best = None
-        while while new_best is not None and best_parent.id != new_best.id: #comparison on remoteids?
-            new_best = self.network.seek(best_parent,self.id)
+        while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
+            new_best = self.network.seek(best_parent,self.info.id)
             found_peers.add(new_best)
         inital_peers = self.network.getPeers(best_parent)
         for p in inital_peers:
@@ -139,7 +139,7 @@ class DHTLogic(object):
 
     def getPeers(self):
         with self.peersLock:
-            return = self.short_peers[:] + self.long_peers[:]
+            return self.short_peers[:] + self.long_peers[:]
 
     def getNotified(self,origin):
         with self.notifiedLock:
