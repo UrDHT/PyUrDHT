@@ -5,7 +5,7 @@ pyMultihash is a python implementation of the Multihash standard: https://github
 
 import hashlib
 from . import base58
-
+import binascii
 
 """
 These first two methods are kinda inefficient, but python is not really designed to mess with bytes
@@ -19,7 +19,8 @@ def int_to_byte_array(big_int):
 
 def bytes_to_long(bytestr):
     assert(len(bytestr)>0)
-    return int( ''.join('{:02x}'.format(x) for x in bytestr), 16)
+    thing = bytes(bytestr)
+    return int( binascii.hexlify(thing), 16)
 
 
 """
@@ -50,10 +51,10 @@ def genHash(bytestr,func_id):
         hashfunc = hashlib.sha512()
     else:
         raise Exception("Requested hash is not supported")
-    bytestr = bytearray(bytestr,"UTF-8")
+    bytestr = bytes(bytestr,"UTF-8")
     hashfunc.update(bytestr)
     data = hashfunc.digest()
     size = hashfunc.digest_size
-    bytes = [func_id,size]+list(data)
-    return base58.encode(bytes_to_long(bytes))
+    bytestr = b""+bytes(func_id)+bytes(size)+data
+    return base58.encode(bytes_to_long(bytestr))
 

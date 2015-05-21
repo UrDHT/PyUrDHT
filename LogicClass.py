@@ -101,19 +101,22 @@ class DHTLogic(object):
         self.maintenance_thread= DHTMaintenceWorker(self)
         return True
 
-    def join(self,bootStraps):
+    def join(self,peer):
         #seek for insertion point
-        found_peers = set(bootStraps)
+        found_peers = set([peer])
         best_parent = peer
         new_best = None
-        while while new_best is not None and best_parent.id != new_best.id: #comparison on remoteids?
-            new_best = self.network.seek(best_parent,self.id)
+        while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
+            new_best = self.network.seek(best_parent,self.info.id)
             found_peers.add(new_best)
+            best_parent = new_best
         inital_peers = self.network.getPeers(best_parent)
-        for p in inital_peers:
-            found_peers.add(p)
+        if inital_peers:
+            for p in inital_peers:
+                found_peers.add(p)
         with self.peersLock:
             self.short_peers = list(found_peers)
+        #print("done join, staring worker")
         self.maintenance_thread.start()
         return True
 
@@ -125,23 +128,33 @@ class DHTLogic(object):
         return True
 
     def doIOwn(self,id):
-        loc = space.id_to_point(id)
+        loc = space.id_to_point(2,id)
+
         with self.peersLock:
-            bestloc = space.getClosest(self.seekCanidates)
+            if len(self.seekCanidates) == 0:
+                return True 
+            bestloc = space.getClosest(loc,self.seekCanidates+[self.loc])
         return bestloc == self.loc
 
     def seek(self,id):
-        loc = space.id_to_point(id)
+        if(self.doIOwn(id)):
+            return self.info
+
+        loc = space.id_to_point(2,id)
+
         with self.peersLock:
-            bestloc = space.getClosest(self.seekCanidates)
+            if len(self.seekCanidates) == 0:
+                return self.info 
+            bestloc = space.getClosest(loc,self.seekCanidates)
             peer = self.loc2peerTable[bestloc]
         return peer
 
     def getPeers(self):
         with self.peersLock:
-            return = self.short_peers[:] + self.long_peers[:]
+            return self.short_peers[:] + self.long_peers[:]
 
     def getNotified(self,origin):
+        #print("GOT NOTIFIED",origin)
         with self.notifiedLock:
             self.notified_me.append(origin)
         return True
@@ -156,26 +169,58 @@ class DHTMaintenceWorker(threading.Thread):
 
     def run(self):
         with self.runningLock:
+
             peers_2_notify = None
             while self.running:
+                #print("myinfo",self.parent.info)
+                #print("Worker Tick Start")
                 #"Notify all my short peers"
                 peers_2_keep = []
                 with self.parent.peersLock:
+                    #print("got peer lock")
                     peers_2_notify = self.parent.short_peers[:]+self.parent.long_peers[:]
-                for p in peers_2_notify:
-                    if self.parent.network.notify(p,self.parent.info):
-                        peers_2_keep.add(p)
-                    #throw away nodes I cannot notify.
-                time.sleep(5)# essentially the maintaince cycle period
 
+                done = False
+                while not done:
+                    done = True
+                    for p in peers_2_notify:
+                        if p == self.parent.info:
+                            peers_2_notify.remove(p)
+                            done = False
+                            print("Removed Myself!")
+                #print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
-                    peers_2_keep += self.parent.notified_me
+                    peers_2_notify += self.parent.notified_me
                     self.parent.notified_me = []
+
+                for p in set(peers_2_notify):
+                    #print("notifying ",p)
+                    if self.parent.network.notify(p,self.parent.info) == True:
+                        hop_peers = self.parent.network.getPeers(p)
+                        if len(hop_peers) > 0:
+                            for hop_p in hop_peers:
+                                with self.parent.notifiedLock:
+                                    self.parent.notified_me.append(hop_p)
+                        peers_2_keep.append(p)
+                    #print("done notifying ",p)
+                    #throw away nodes I cannot notify.
+                #print("Sleeping")
+                time.sleep(5)# essentially the maintaince cycle period
+
                 points = []
                 locdict = {}
+                done = False
+                while not done:
+                    done = True
+                    for p in peers_2_keep:
+                        if p == self.parent.info:
+                            peers_2_keep.remove(p)
+                            done = False
+                            print("Removed Myself!")
+                #print(peers_2_keep)
                 for p in set(peers_2_keep):
-                    l = space.id_to_point(p.id)
+                    l = space.id_to_point(2,p.id)
                     points.append(l)
                     locdict[l] = p
                 new_short_locs = space.getDelaunayPeers(points,self.parent.loc)
@@ -186,7 +231,7 @@ class DHTMaintenceWorker(threading.Thread):
                     self.parent.long_peers = leftovers
                     self.parent.seekCanidates = points
                     self.parent.loc2peerTable = locdict
-
-
-            
+                    #print("SHORT",self.parent.short_peers)
+                    #print("LONG",self.parent.long_peers)
+                    #print("SELF",)
             

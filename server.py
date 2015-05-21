@@ -5,94 +5,81 @@
 # free to test this by running 'python server.py' and using the Curl
 # utility like so: 'curl localhost:8000/apiv01/client/get/test' or whatever.
 
-import cherrypy
-from PyUrDHT import NetworkClass
+import threading
 
-api_version = "apiv01"
+from util import PeerInfo
 
-class Root(object):
-    exposed = True    
-    pass
+import http.server
+import json
+import re, cgi
 
-class Client(object):
-    exposed = True
+api_version = "api/v0"
 
-    def __init__(self):
-        pass
+mylogic = None
+myDB = None
 
-    @cherrypy.tools.json_out()
-    def POST(self, *vpath, **params):
-        print(vpath)
-        return {"error": "Not Supported"}
+def setlinks(logic,db):
+    global mylogic
+    global myDB
+    mylogic = logic
+    myDB = db
 
-    @cherrypy.tools.json_out()
-    def GET(self, *vpath, **params):
-        print(vpath)
-        return {"error": "Not Supported"}
+class RESTHandler(http.server.BaseHTTPRequestHandler):
+    def do_HEAD(s):
+        s.send_response(200)
+        s.send_header("Content-type", "application/json")
+        s.end_headers()
+    def do_GET(self):
+        self.do_HEAD()
+        #self.wfile.write(b"HTTP/1.1 200 OK\n")
+        if None != re.search('/api/v0/client/seek/*', self.path):
+            recordID = self.path.split('/')[-1]
+            result = mylogic.seek(recordID)
+            answer = bytes(str(result),"UTF-8")
+            self.wfile.write(answer)
+        if None != re.search('/api/v0/peer/seek/*', self.path):
+            recordID = self.path.split('/')[-1]
+            result = mylogic.seek(recordID)
+            answer = bytes(str(result),"UTF-8")
+            self.wfile.write(answer)
+        if None != re.search('/api/v0/client/get/*', self.path):
+            recordID = self.path.split('/')[-1]
+            result = myDB.get(recordID)
+            if result:
+                answer = bytes(result)
+                self.wfile.write(answer)
 
-class Peer(object):
-    exposed = True    
-    
-    def __init__(self):
-        pass
-
-    @cherrypy.tools.json_out()
-    def POST(self, *vpath, **params):
-        print(vpath)
-        return {"error": "Not Supported"}
-
-    @cherrypy.tools.json_out()
-    def GET(self, *vpath, **params):
-        print(vpath)
-        return {"error": "Not Supported"}
+        if None != re.search('/api/v0/peer/getPeers*', self.path):
+            recordID = self.path.split('/')[-1]
+            result_list = mylogic.getPeers()
+            result = map(str,result_list)
+            answer = "[%s]"%",".join(result)
+            self.wfile.write(bytes(answer,"UTF-8"))
 
 
-class GetValue():
-    ''' checks the database of the Node and 
-        returns the value if found. '''
-    def __init__(self):
-        pass
 
-class StoreValue(object):
-    ''' reads in posted value and stores it 
-        locally at a given id. '''
-    def __init__(self):
-        pass
+    def do_POST(self):
+        self.do_HEAD()
+        #self.wfile.write(b"HTTP/1.1 200 OK\n")
+        if None != re.search('/api/v0/client/store/*', self.path):
+            content_len = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(content_len)
+            recordID = self.path.split('/')[-1]
+            myDB.store(recordID,data)
 
-class SeekPeer(object):
-    ''' Asks the node to provide a peer closer 
-        to the given record. '''
-    def __init__(self):
-        pass
+        elif None != re.search('/api/v0/peer/notify*', self.path):
+            #print(self.path)
 
-class GetPeers(object):
-    ''' Returns a node's list of peers. Useful 
-        for join and maintenance. '''
-    def __init__(self):
-        pass
+            content_len = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(content_len)
+            #data = self.rfile.read()
+            #print("NOTIFIED",data)
+            json_dict = json.loads(str(data,"UTF-8"))
+            addr = json_dict["addr"]
+            hashid = json_dict["id"]
+            mylogic.getNotified(PeerInfo(hashid,addr))
+            self.wfile.write(b"[]")
 
-class Notify(object):
-    ''' Post the node information of the sending node.
-        Notifies a remote node that a given node exists.
-        It is up to the remote node to decide what to do 
-        with that information. '''
-
-    def __init__(self):
-        pass
-
-def main():
-    root = Root()
-    root.client = Client()
-    root.peer = Peer()
-    conf = {
-        'global': {
-            'server.socket_host': '0.0.0.0',
-            'server.socket_port': 8000,
-        },
-        '/': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        },
-    }
-    cherrypy.quickstart(root, '/' + api_version + '/', conf)
-
-main()
+def getThread(ip='0.0.0.0',port=8000):
+    server = http.server.HTTPServer((ip,port), RESTHandler)
+    return threading.Thread(target=server.serve_forever)

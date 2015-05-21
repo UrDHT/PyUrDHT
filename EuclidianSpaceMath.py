@@ -1,4 +1,4 @@
-import vendored.pymultihash as MultiHash
+import pymultihash as MultiHash
 
 import random
 
