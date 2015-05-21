@@ -46,7 +46,9 @@ class Networking(object):
 		#print("SENDING NOTIFY",remote,origin)
 		try:
 			r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
+			print("The Post Worked")
 			return r.status_code == requests.codes.ok
 		except:
+			print("The Post failed")
 			return False
 

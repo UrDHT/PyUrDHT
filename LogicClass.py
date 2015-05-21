@@ -188,23 +188,26 @@ class DHTMaintenceWorker(threading.Thread):
                             peers_2_notify.remove(p)
                             done = False
                             print("Removed Myself!")
-                for p in peers_2_notify:
+                #print("thinking")
+                #"Re-evaluate my peerlist"
+                with self.parent.notifiedLock:
+                    peers_2_notify += self.parent.notified_me
+                    self.parent.notified_me = []
+
+                for p in set(peers_2_notify):
                     #print("notifying ",p)
-                    if self.parent.network.notify(p,self.parent.info):
+                    if self.parent.network.notify(p,self.parent.info) == True:
                         hop_peers = self.parent.network.getPeers(p)
                         if len(hop_peers) > 0:
                             for hop_p in hop_peers:
-                                peers_2_keep.append(hop_p)
+                                with self.parent.notifiedLock:
+                                    self.parent.notified_me.append(hop_p)
                         peers_2_keep.append(p)
                     #print("done notifying ",p)
                     #throw away nodes I cannot notify.
                 #print("Sleeping")
                 time.sleep(5)# essentially the maintaince cycle period
-                #print("thinking")
-                #"Re-evaluate my peerlist"
-                with self.parent.notifiedLock:
-                    peers_2_keep += self.parent.notified_me
-                    self.parent.notified_me = []
+
                 points = []
                 locdict = {}
                 done = False
