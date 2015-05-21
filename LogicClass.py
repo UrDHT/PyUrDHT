@@ -109,9 +109,11 @@ class DHTLogic(object):
         while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
             new_best = self.network.seek(best_parent,self.info.id)
             found_peers.add(new_best)
+            best_parent = new_best
         inital_peers = self.network.getPeers(best_parent)
-        for p in inital_peers:
-            found_peers.add(p)
+        if inital_peers:
+            for p in inital_peers:
+                found_peers.add(p)
         with self.peersLock:
             self.short_peers = list(found_peers)
         print("done join, staring worker")
@@ -174,7 +176,7 @@ class DHTMaintenceWorker(threading.Thread):
                 for p in peers_2_notify:
                     print("notifying ",p)
                     if self.parent.network.notify(p,self.parent.info):
-                        peers_2_keep.add(p)
+                        peers_2_keep.append(p)
                     print("done notifying ",p)
                     #throw away nodes I cannot notify.
                 print("Sleeping")
@@ -186,6 +188,15 @@ class DHTMaintenceWorker(threading.Thread):
                     self.parent.notified_me = []
                 points = []
                 locdict = {}
+                done = False
+                while not done:
+                    done = True
+                    for p in peers_2_keep:
+                        if p == self.parent.info:
+                            peers_2_keep.remove(p)
+                            done = False
+                            print("Removed Myself!")
+                print(peers_2_keep)
                 for p in set(peers_2_keep):
                     l = space.id_to_point(2,p.id)
                     points.append(l)
@@ -198,7 +209,7 @@ class DHTMaintenceWorker(threading.Thread):
                     self.parent.long_peers = leftovers
                     self.parent.seekCanidates = points
                     self.parent.loc2peerTable = locdict
-
-
-            
+                    print("SHORT",self.parent.short_peers)
+                    print("LONG",self.parent.long_peers)
+                    print("SELF",)
             

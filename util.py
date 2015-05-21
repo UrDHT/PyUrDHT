@@ -21,3 +21,6 @@ class PeerInfo(object):
 
     def __eq__(self,other):
         return hash(self)==hash(other)
+
+    def __repr__(self):
+        return str(self)

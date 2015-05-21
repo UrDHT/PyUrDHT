@@ -43,5 +43,5 @@ class Networking(object):
 	def notify(self,remote,origin):
 
 		r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
-		return r.json()
+		return r.status_code == requests.codes.ok
 

@@ -71,7 +71,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             content_len = int(self.headers.get_all('content-length')[0])
             data = self.rfile.read(content_len)
             #data = self.rfile.read()
-            print(data)
+            print("NOTIFIED",data)
             json_dict = json.loads(str(data,"UTF-8"))
             addr = json_dict["addr"]
             hashid = json_dict["id"]
