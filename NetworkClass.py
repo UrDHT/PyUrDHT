@@ -9,6 +9,7 @@ see: https://github.com/UrDHT/DevelopmentPlan/blob/master/Network.md
 import server
 import requests
 import json
+import util
 
 class Networking(object):
 	def __init__(self,ip,port):
@@ -19,17 +20,28 @@ class Networking(object):
 		server.setlinks(logic,data)
 
 	def seek(self,remote,id):
+		path = remote.addr+"api/v0/peer/"+"seek/%s" % id 
+		r = requests.get(path)
+
 		
-		r = requests.get(remote.addr+"api/v0/peer/"+"seek/%s" % id )
-		return json.loads(r.json())
+		results = r.json()
+		return util.PeerInfo(results["id"],results["addr"])
 
 	def getPeers(self,remote):
 		
-		r = requests.get(remote.addr+"api/v0/getpeers/")
-		return json.loads(r.json())
+		r = requests.get(remote.addr+"api/v0/peer/getPeers/")
+		print(r.text)
+		print(r.text)
+		print(r.text)
+
+		result = []
+		if len(r.json()) == 0:
+			return []
+		for p in r.json():
+			newpeer = util.PeerInfo(p["id"],p["addr"])
 
 	def notify(self,remote,origin):
 
-		r = request.post(remote.addr+"api/v0/notify", params=origin)
+		r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
 		return json.loads(r.json())
 

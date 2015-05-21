@@ -126,14 +126,20 @@ class DHTLogic(object):
 
     def doIOwn(self,id):
         loc = space.id_to_point(id)
+
         with self.peersLock:
-            bestloc = space.getClosest(self.seekCanidates)
+            if len(self.seekCanidates) == 0:
+                return True 
+            bestloc = space.getClosest(loc,self.seekCanidates)
         return bestloc == self.loc
 
     def seek(self,id):
-        loc = space.id_to_point(id)
+        loc = space.id_to_point(2,id)
+
         with self.peersLock:
-            bestloc = space.getClosest(self.seekCanidates)
+            if len(self.seekCanidates) == 0:
+                return self.info 
+            bestloc = space.getClosest(loc,self.seekCanidates)
             peer = self.loc2peerTable[bestloc]
         return peer
 

@@ -13,3 +13,5 @@ class PeerInfo(object):
         self.id = hashid
         self.addr = addr
 
+    def __str__(self):
+        return """{"id":"%s", "addr":"%s"}"""%(self.id,self.addr)
