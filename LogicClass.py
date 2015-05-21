@@ -114,6 +114,7 @@ class DHTLogic(object):
             found_peers.add(p)
         with self.peersLock:
             self.short_peers = list(found_peers)
+        print("done join, staring worker")
         self.maintenance_thread.start()
         return True
 
@@ -164,16 +165,21 @@ class DHTMaintenceWorker(threading.Thread):
         with self.runningLock:
             peers_2_notify = None
             while self.running:
+                print("Worker Tick Start")
                 #"Notify all my short peers"
                 peers_2_keep = []
                 with self.parent.peersLock:
+                    print("got peer lock")
                     peers_2_notify = self.parent.short_peers[:]+self.parent.long_peers[:]
                 for p in peers_2_notify:
+                    print("notifying ",p)
                     if self.parent.network.notify(p,self.parent.info):
                         peers_2_keep.add(p)
+                    print("done notifying ",p)
                     #throw away nodes I cannot notify.
+                print("Sleeping")
                 time.sleep(5)# essentially the maintaince cycle period
-
+                print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
                     peers_2_keep += self.parent.notified_me
@@ -181,7 +187,7 @@ class DHTMaintenceWorker(threading.Thread):
                 points = []
                 locdict = {}
                 for p in set(peers_2_keep):
-                    l = space.id_to_point(p.id)
+                    l = space.id_to_point(2,p.id)
                     points.append(l)
                     locdict[l] = p
                 new_short_locs = space.getDelaunayPeers(points,self.parent.loc)

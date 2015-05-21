@@ -15,3 +15,9 @@ class PeerInfo(object):
 
     def __str__(self):
         return """{"id":"%s", "addr":"%s"}"""%(self.id,self.addr)
+
+    def __hash__(self):
+        return hash((hash(self.id),hash(self.addr)))
+
+    def __eq__(self,other):
+        return hash(self)==hash(other)

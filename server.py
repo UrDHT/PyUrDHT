@@ -60,16 +60,23 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         self.do_HEAD()
         #self.wfile.write(b"HTTP/1.1 200 OK\n")
         if None != re.search('/api/v0/client/store/*', self.path):
-            data = self.rfile.read()
+            content_len = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(content_len)
             recordID = self.path.split('/')[-1]
             myDB.store(recordID,data)
 
         elif None != re.search('/api/v0/peer/notify*', self.path):
-            data = self.rfile.read()
-            json_dict = json.loads(data)
+            print(self.path)
+
+            content_len = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(content_len)
+            #data = self.rfile.read()
+            print(data)
+            json_dict = json.loads(str(data,"UTF-8"))
             addr = json_dict["addr"]
             hashid = json_dict["id"]
             mylogic.getNotified(PeerInfo(hashid,addr))
+            self.wfile.write(b"[]")
 
 def getThread(ip='0.0.0.0',port=8000):
     server = http.server.HTTPServer((ip,port), RESTHandler)

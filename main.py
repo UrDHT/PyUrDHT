@@ -3,25 +3,45 @@ import DataBaseClass
 import LogicClass
 import util
 from pymultihash import genHash
+import sys
+import json
 
-ip = "127.0.0.1"
-port = 8080
+if __name__=="__main__":
+	ip = "127.0.0.1"
+	port = 8080
+	bootstrap = None
+	if len(sys.argv)>1:
+		url = sys.argv[1].split(":")
+		ip = url[0]
+		port = int(url[1])
 
-path = "http://%s:%d/"%(ip,port)
-hashid = genHash("sha1",0x11)
+		url = json.loads(""" {"id":"uouaLJjo7Conf1hMAByiCjKwjL3","addr":"http://127.0.0.1:8080/"}""")
+		bootstrap = util.PeerInfo(url["id"],url["addr"])
+		print("bootsreap!",bootstrap)
+		
+	
 
-print(hashid)
-
-peerinfo = util.PeerInfo(hashid,path)
 
 
-logic = LogicClass.DHTLogic(peerinfo)
+	path = "http://%s:%d/"%(ip,port)
+	hashid = genHash(path,0x11)
 
-net = NetworkClass.Networking(ip,port)
+	
 
-data = DataBaseClass.DataBase()
+	peerinfo = util.PeerInfo(hashid,path)
 
-logic.setup(net)
-net.setup(logic,data)
+	print(peerinfo)
 
-logic.join(peerinfo)
+	if bootstrap is None:
+		bootstrap = peerinfo
+
+	logic = LogicClass.DHTLogic(bootstrap)
+
+	net = NetworkClass.Networking(ip,port)
+
+	data = DataBaseClass.DataBase()
+
+	logic.setup(net)
+	net.setup(logic,data)
+
+	logic.join(peerinfo)
