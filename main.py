@@ -37,7 +37,7 @@ if __name__=="__main__":
 
 	logic = LogicClass.DHTLogic(peerinfo)
 
-	net = NetworkClass.Networking(ip,port)
+	net = NetworkClass.Networking("0.0.0.0",port)
 
 	data = DataBaseClass.DataBase()
 

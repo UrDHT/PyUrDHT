@@ -179,6 +179,15 @@ class DHTMaintenceWorker(threading.Thread):
                 with self.parent.peersLock:
                     #print("got peer lock")
                     peers_2_notify = self.parent.short_peers[:]+self.parent.long_peers[:]
+
+                done = False
+                while not done:
+                    done = True
+                    for p in peers_2_notify:
+                        if p == self.parent.info:
+                            peers_2_notify.remove(p)
+                            done = False
+                            print("Removed Myself!")
                 for p in peers_2_notify:
                     #print("notifying ",p)
                     if self.parent.network.notify(p,self.parent.info):
@@ -205,7 +214,7 @@ class DHTMaintenceWorker(threading.Thread):
                         if p == self.parent.info:
                             peers_2_keep.remove(p)
                             done = False
-                            #print("Removed Myself!")
+                            print("Removed Myself!")
                 #print(peers_2_keep)
                 for p in set(peers_2_keep):
                     l = space.id_to_point(2,p.id)
