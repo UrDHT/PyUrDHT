@@ -45,7 +45,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         if None != re.search('/api/v0/client/get/*', self.path):
             recordID = self.path.split('/')[-1]
             result = myDB.get(recordID)
-            answer = bytes(json.dumps(result))
+            answer = bytes(result)
             self.wfile.write(answer)
         if None != re.search('/api/v0/peer/getPeers*', self.path):
             recordID = self.path.split('/')[-1]
@@ -66,12 +66,12 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             myDB.store(recordID,data)
 
         elif None != re.search('/api/v0/peer/notify*', self.path):
-            print(self.path)
+            #print(self.path)
 
             content_len = int(self.headers.get_all('content-length')[0])
             data = self.rfile.read(content_len)
             #data = self.rfile.read()
-            print("NOTIFIED",data)
+            #print("NOTIFIED",data)
             json_dict = json.loads(str(data,"UTF-8"))
             addr = json_dict["addr"]
             hashid = json_dict["id"]

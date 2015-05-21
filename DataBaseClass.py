@@ -20,5 +20,5 @@ class DataBase(object):
             return self.records[id]
         except:
             return None
-    def put(self,id,val):
+    def store(self,id,val):
         self.records[id] = val

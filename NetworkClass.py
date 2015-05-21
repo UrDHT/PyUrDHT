@@ -30,18 +30,23 @@ class Networking(object):
 	def getPeers(self,remote):
 		
 		r = requests.get(remote.addr+"api/v0/peer/getPeers/")
-		print(r.text)
-		print(r.text)
-		print(r.text)
+		#print(r.text)
+		#print(r.text)
+		#print(r.text)
 
 		result = []
 		if len(r.json()) == 0:
 			return []
 		for p in r.json():
 			newpeer = util.PeerInfo(p["id"],p["addr"])
+			result.append(newpeer)
+		return result
 
 	def notify(self,remote,origin):
-		print("SENDING NOTIFY",remote,origin)
-		r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
-		return r.status_code == requests.codes.ok
+		#print("SENDING NOTIFY",remote,origin)
+		try:
+			r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
+			return r.status_code == requests.codes.ok
+		except:
+			return False
 
