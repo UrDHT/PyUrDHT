@@ -15,7 +15,7 @@ if __name__=="__main__":
 		ip = url[0]
 		port = int(url[1])
 	if len(sys.argv)>2:
-		url = json.loads("""{"id":"3hM7FqFmj1K3U8DWWHd5jv2ufTbz", "addr":"http://127.0.0.1:8080/"}""")
+		url = json.loads("""{"id":"31V1kNSUfDXD7eZKtd7MWuHFUUyo", "addr":"http://45.79.205.125:8000/"}""")
 		bootstrap = util.PeerInfo(url["id"],url["addr"])
 		print("bootstrap!",bootstrap)
 		
