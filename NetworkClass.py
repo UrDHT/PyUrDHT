@@ -7,7 +7,7 @@ see: https://github.com/UrDHT/DevelopmentPlan/blob/master/Network.md
 
 """
 import server
-import requests
+import myrequests as requests
 import json
 import util
 
