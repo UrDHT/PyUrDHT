@@ -45,8 +45,10 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         if None != re.search('/api/v0/client/get/*', self.path):
             recordID = self.path.split('/')[-1]
             result = myDB.get(recordID)
-            answer = bytes(result)
-            self.wfile.write(answer)
+            if result:
+                answer = bytes(result)
+                self.wfile.write(answer)
+
         if None != re.search('/api/v0/peer/getPeers*', self.path):
             recordID = self.path.split('/')[-1]
             result_list = mylogic.getPeers()
