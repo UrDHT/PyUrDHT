@@ -151,6 +151,7 @@ class DHTLogic(object):
             return self.short_peers[:] + self.long_peers[:]
 
     def getNotified(self,origin):
+        print("GOT NOTIFIED",origin)
         with self.notifiedLock:
             self.notified_me.append(origin)
         return True
@@ -165,8 +166,10 @@ class DHTMaintenceWorker(threading.Thread):
 
     def run(self):
         with self.runningLock:
+
             peers_2_notify = None
             while self.running:
+                print("myinfo",self.parent.info)
                 print("Worker Tick Start")
                 #"Notify all my short peers"
                 peers_2_keep = []

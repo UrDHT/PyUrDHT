@@ -41,7 +41,7 @@ class Networking(object):
 			newpeer = util.PeerInfo(p["id"],p["addr"])
 
 	def notify(self,remote,origin):
-
+		print("SENDING NOTIFY",remote,origin)
 		r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
 		return r.status_code == requests.codes.ok
 

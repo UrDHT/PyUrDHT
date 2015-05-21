@@ -17,7 +17,7 @@ if __name__=="__main__":
 	if len(sys.argv)>2:
 		url = json.loads("""{"id":"3hM7FqFmj1K3U8DWWHd5jv2ufTbz", "addr":"http://127.0.0.1:8080/"}""")
 		bootstrap = util.PeerInfo(url["id"],url["addr"])
-		print("bootsreap!",bootstrap)
+		print("bootstrap!",bootstrap)
 		
 	
 
@@ -35,7 +35,7 @@ if __name__=="__main__":
 	if bootstrap is None:
 		bootstrap = peerinfo
 
-	logic = LogicClass.DHTLogic(bootstrap)
+	logic = LogicClass.DHTLogic(peerinfo)
 
 	net = NetworkClass.Networking(ip,port)
 
@@ -44,4 +44,4 @@ if __name__=="__main__":
 	logic.setup(net)
 	net.setup(logic,data)
 
-	logic.join(peerinfo)
+	logic.join(bootstrap)
