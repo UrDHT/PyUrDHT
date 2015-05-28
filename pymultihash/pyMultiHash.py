@@ -55,6 +55,6 @@ def genHash(bytestr,func_id):
     hashfunc.update(bytestr)
     data = hashfunc.digest()
     size = hashfunc.digest_size
-    bytestr = b""+bytes(func_id)+bytes(size)+data
+    bytestr = b''+func_id.to_bytes(1,"big")+size.to_bytes(1,"big")+data
     return base58.encode(bytes_to_long(bytestr))
 
