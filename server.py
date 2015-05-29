@@ -56,6 +56,8 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             answer = "[%s]"%",".join(result)
             self.wfile.write(bytes(answer,"UTF-8"))
 
+        if None != re.search('/api/v0/peer/getmyIP*', self.path):
+            self.wfile.write(bytes(self.client_address[0],"UTF-8"))
 
 
     def do_POST(self):
