@@ -135,7 +135,7 @@ class DHTLogic(object):
         canidates = None
         with self.peersLock:
             canidates = self.seekCanidates
-        bestloc = space.getClosest(loc,self.seekCanidates)
+        bestloc = space.getClosest(loc,canidates)
         peer = self.loc2peerTable[bestloc]
         return peer
 
@@ -170,14 +170,7 @@ class DHTMaintenceWorker(threading.Thread):
                     #print("got peer lock")
                     peers_2_notify = self.parent.short_peers[:]+self.parent.long_peers[:]
 
-                done = False
-                while not done:
-                    done = True
-                    for p in peers_2_notify:
-                        if p == self.parent.info:
-                            peers_2_notify.remove(p)
-                            done = False
-                            print("Removed Myself!")
+                assert(self.parent.info not in peers_2_notify)
                 #print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
