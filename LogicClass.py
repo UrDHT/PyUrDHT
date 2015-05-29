@@ -78,6 +78,7 @@ import time
 
 MAX_LONGPEERS = 200
 MIN_SHORTPEERS = 10
+MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
 
 
 
@@ -160,62 +161,60 @@ class DHTMaintenceWorker(threading.Thread):
     def run(self):
         with self.runningLock:
 
-            peers_2_notify = None
+            peerCanidates = None
             while self.running:
                 #print("myinfo",self.parent.info)
                 #print("Worker Tick Start")
                 #"Notify all my short peers"
-                peers_2_keep = []
+                peerCanidateSet = set()
                 with self.parent.peersLock:
                     #print("got peer lock")
-                    peers_2_notify = self.parent.short_peers[:]+self.parent.long_peers[:]
+                    peerCanidateSet += set(self.parent.short_peers[:]+self.parent.long_peers[:])
 
-                assert(self.parent.info not in peers_2_notify)
+                assert(self.parent.info not in peerCanidateSet)
                 #print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
-                    peers_2_notify += self.parent.notified_me
+                    peerCanidateSet += set(self.parent.notified_me)
                     self.parent.notified_me = []
 
-                for p in set(peers_2_notify):
-                    #print("notifying ",p)
-                    if self.parent.network.notify(p,self.parent.info) == True:
-                        hop_peers = self.parent.network.getPeers(p)
-                        if len(hop_peers) > 0:
-                            for hop_p in hop_peers:
-                                with self.parent.notifiedLock:
-                                    self.parent.notified_me.append(hop_p)
-                        peers_2_keep.append(p)
-                    #print("done notifying ",p)
-                    #throw away nodes I cannot notify.
-                #print("Sleeping")
-                time.sleep(5)# essentially the maintaince cycle period
+                for p in set(peerCanidateSet): #Cull anybody who fails a ping
+                    if not self.parent.network.ping(p) == True:
+                        peerCanidateSet.remove(p)
+                    #TODO: make parallel
 
                 points = []
                 locdict = {}
-                done = False
-                while not done:
-                    done = True
-                    for p in peers_2_keep:
-                        if p == self.parent.info:
-                            peers_2_keep.remove(p)
-                            done = False
-                            print("Removed Myself!")
+
                 #print(peers_2_keep)
-                for p in set(peers_2_keep):
+                for p in set(peerCanidateSet):
                     l = space.id_to_point(2,p.id)
                     points.append(l)
                     locdict[l] = p
                 locdict[self.parent.loc] = self.parent.info
-                new_short_locs = space.getDelaunayPeers(points,self.parent.loc)
-                new_short_peers = [locdict[x] for x in new_short_locs]
-                leftovers = list(set(peers_2_keep)-set(new_short_peers))
+                newShortLocsList = space.getDelaunayPeers(points,self.parent.loc)
+                newShortPeersList = [locdict[x] for x in newShortLocsList]
+                leftoversList = list(peerCanidateSet-set(newShortPeersList))
+
+                if len(newShortPeersList)<MIN_SHORTPEERS and len(leftoversList)>0:
+                    leftoverLocsList = list(set(points)-set(newShortLocsList))
+                    sortedLeftoverLocsList = sorted()
+                    needed = min((len(leftovers),MIN_SHORTPEERS))
+                    newShortPeerLocsList = leftoverLocsList[:needed]
+                    newShortPeersList += [locdict[x] for x in newShortPeerLocsList]
+                    if needed < len(leftoversList):
+                        leftoversList = [locdict[x] for x in sortedLeftoverLocsList[needed:]]
+                if len(leftoversList) > MAX_LONGPEERS:
+                    leftoversList = random.sample(leftoversList,MAX_LONGPEERS)
+
                 with self.parent.peersLock:
                     self.parent.short_peers = new_short_peers
                     self.parent.long_peers = leftovers
                     self.parent.seekCanidates = points + [self.parent.loc]
                     self.parent.loc2peerTable = locdict
-                    #print("SHORT",self.parent.short_peers)
-                    #print("LONG",self.parent.long_peers)
-                    #print("SELF",)
-            
+
+                for p in new_short_peers:
+                    peerCanidateSet+=set(self.parent.network.GetPeers(p))
+                    #TODO make parallel
+
+                time.sleep(MAINTENANCE_SLEEP_PERIOD)
