@@ -128,25 +128,15 @@ class DHTLogic(object):
         return True
 
     def doIOwn(self,id):
-        loc = space.id_to_point(2,id)
-
-        with self.peersLock:
-            if len(self.seekCanidates) == 0:
-                return True 
-            bestloc = space.getClosest(loc,self.seekCanidates+[self.loc])
-        return bestloc == self.loc
+        return self.seek(id) == self.loc
 
     def seek(self,id):
-        if(self.doIOwn(id)):
-            return self.info
-
         loc = space.id_to_point(2,id)
-
+        canidates = None
         with self.peersLock:
-            if len(self.seekCanidates) == 0:
-                return self.info 
-            bestloc = space.getClosest(loc,self.seekCanidates)
-            peer = self.loc2peerTable[bestloc]
+            canidates = self.seekCanidates
+        bestloc = space.getClosest(loc,self.seekCanidates)
+        peer = self.loc2peerTable[bestloc]
         return peer
 
     def getPeers(self):
@@ -223,13 +213,14 @@ class DHTMaintenceWorker(threading.Thread):
                     l = space.id_to_point(2,p.id)
                     points.append(l)
                     locdict[l] = p
+                locdict[self.parent.loc] = self.parent.info
                 new_short_locs = space.getDelaunayPeers(points,self.parent.loc)
                 new_short_peers = [locdict[x] for x in new_short_locs]
                 leftovers = list(set(peers_2_keep)-set(new_short_peers))
                 with self.parent.peersLock:
                     self.parent.short_peers = new_short_peers
                     self.parent.long_peers = leftovers
-                    self.parent.seekCanidates = points
+                    self.parent.seekCanidates = points + [self.parent.loc]
                     self.parent.loc2peerTable = locdict
                     #print("SHORT",self.parent.short_peers)
                     #print("LONG",self.parent.long_peers)
