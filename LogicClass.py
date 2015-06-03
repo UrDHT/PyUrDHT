@@ -136,6 +136,8 @@ class DHTLogic(object):
         candidates = None
         with self.peersLock:
             candidates = self.seekCandidates
+        if len(candidates) ==0:
+            return self.info
         bestLoc = space.getClosest(loc,candidates)
         peer = self.loc2PeerTable[bestLoc]
         return peer
@@ -169,13 +171,14 @@ class DHTMaintenceWorker(threading.Thread):
                 peerCandidateSet = set()
                 with self.parent.peersLock:
                     #print("got peer lock")
-                    peerCandidateSet += set(self.parent.shortPeers[:]+self.parent.longPeers[:])
+                    peerCandidateSet.update( set(self.parent.shortPeers[:]+self.parent.longPeers[:]))
 
+                peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet))
                 assert(self.parent.info not in peerCandidateSet)
                 #print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
-                    peerCandidateSet += set(self.parent.notifiedMe)
+                    peerCandidateSet.update(set(self.parent.notifiedMe))
                     self.parent.notifiedMe = []
 
                 for p in set(peerCandidateSet): #Cull anybody who fails a ping
@@ -208,12 +211,12 @@ class DHTMaintenceWorker(threading.Thread):
                     leftoversList = random.sample(leftoversList,MAX_LONGPEERS)
 
                 with self.parent.peersLock:
-                    self.parent.shortPeers = newShortPeers
-                    self.parent.longPeers = leftovers
+                    self.parent.shortPeers = newShortPeersList
+                    self.parent.longPeers = leftoversList
                     self.parent.seekCandidates = points + [self.parent.loc]
                     self.parent.loc2PeerTable = locDict
 
-                for p in newShortPeers:
+                for p in newShortPeersList:
                     peerCandidateSet+=set(self.parent.network.GetPeers(p))
                     #TODO make parallel
 
