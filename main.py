@@ -24,18 +24,18 @@ if __name__=="__main__":
 
 
 	path = "http://%s:%d/"%(ip,port)
-	hashid = genHash(path,0x11)
+	hashID = genHash(path,0x11)
 
 	
 
-	peerinfo = util.PeerInfo(hashid,path)
+	peerInfo = util.PeerInfo(hashID,path)
 
-	print(peerinfo)
+	print(peerInfo)
 
 	if bootstrap is None:
-		bootstrap = peerinfo
+		bootstrap = peerInfo
 
-	logic = LogicClass.DHTLogic(peerinfo)
+	logic = LogicClass.DHTLogic(peerInfo)
 
 	net = NetworkClass.Networking("0.0.0.0",port)
 

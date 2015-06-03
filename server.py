@@ -15,13 +15,13 @@ import re, cgi
 
 api_version = "api/v0"
 
-mylogic = None
+myLogic = None
 myDB = None
 
-def setlinks(logic,db):
-    global mylogic
+def setLinks(logic,db):
+    global myLogic
     global myDB
-    mylogic = logic
+    myLogic = logic
     myDB = db
 
 class RESTHandler(http.server.BaseHTTPRequestHandler):
@@ -34,12 +34,12 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         #self.wfile.write(b"HTTP/1.1 200 OK\n")
         if None != re.search('/api/v0/client/seek/*', self.path):
             recordID = self.path.split('/')[-1]
-            result = mylogic.seek(recordID)
+            result = myLogic.seek(recordID)
             answer = bytes(str(result),"UTF-8")
             self.wfile.write(answer)
         if None != re.search('/api/v0/peer/seek/*', self.path):
             recordID = self.path.split('/')[-1]
-            result = mylogic.seek(recordID)
+            result = myLogic.seek(recordID)
             answer = bytes(str(result),"UTF-8")
             self.wfile.write(answer)
         if None != re.search('/api/v0/client/get/*', self.path):
@@ -51,7 +51,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
 
         if None != re.search('/api/v0/peer/getPeers*', self.path):
             recordID = self.path.split('/')[-1]
-            result_list = mylogic.getPeers()
+            result_list = myLogic.getPeers()
             result = map(str,result_list)
             answer = "[%s]"%",".join(result)
             self.wfile.write(bytes(answer,"UTF-8"))
@@ -67,22 +67,22 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         self.do_HEAD()
         #self.wfile.write(b"HTTP/1.1 200 OK\n")
         if None != re.search('/api/v0/client/store/*', self.path):
-            content_len = int(self.headers.get_all('content-length')[0])
-            data = self.rfile.read(content_len)
+            contentLen = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(contentLen)
             recordID = self.path.split('/')[-1]
             myDB.store(recordID,data)
 
         elif None != re.search('/api/v0/peer/notify*', self.path):
             #print(self.path)
 
-            content_len = int(self.headers.get_all('content-length')[0])
-            data = self.rfile.read(content_len)
+            contentLen = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(contentLen)
             #data = self.rfile.read()
             #print("NOTIFIED",data)
-            json_dict = json.loads(str(data,"UTF-8"))
-            addr = json_dict["addr"]
-            hashid = json_dict["id"]
-            mylogic.getNotified(PeerInfo(hashid,addr))
+            jsonDict = json.loads(str(data,"UTF-8"))
+            addr = jsonDict["addr"]
+            hashID = jsonDict["id"]
+            myLogic.getNotified(PeerInfo(hashID,addr))
             self.wfile.write(b"[]")
 
 def getThread(ip='0.0.0.0',port=8000):
