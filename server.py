@@ -59,6 +59,9 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         if None != re.search('/api/v0/peer/getmyIP*', self.path):
             self.wfile.write(bytes(self.client_address[0],"UTF-8"))
 
+        if None != re.search('/api/v0/peer/ping*', self.path):
+            self.wfile.write(b'\"PONG\"')
+
 
     def do_POST(self):
         self.do_HEAD()

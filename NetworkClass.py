@@ -52,3 +52,10 @@ class Networking(object):
 			print("The Post failed")
 			return False
 
+	def ping(self,remote):
+		#print("SENDING NOTIFY",remote,origin)
+		try:
+			r = requests.get(remote.addr+"api/v0/peer/ping")
+			return r.status_code == requests.codes.ok
+		except:
+			return False
