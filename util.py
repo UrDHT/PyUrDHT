@@ -3,14 +3,14 @@ class PeerInfo(object):
         Peerinfo does not actually do much
         I might just reduce it to a 2-tuple
 
-        right now UrDHT is not enforcing a mapping of hashids to servers
+        right now UrDHT is not enforcing a mapping of hashIDs to servers
     """
-    def __init__(self,hashid,addr):
+    def __init__(self,hashID,addr):
         """
-            hashid is a string encoded in multihash format
+            hashID is a string encoded in multihash format
             addr is whatever the network module needs to connect
         """
-        self.id = hashid
+        self.id = hashID
         self.addr = addr
 
     def __str__(self):
