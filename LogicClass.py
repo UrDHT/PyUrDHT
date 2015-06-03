@@ -41,9 +41,9 @@ DHT logic can be internally separated into two parts:
 ## Reactive Logic:
  Dealing with a reactive query should work as follows:
  ```
-    get read lock on peerinfo
-    copy needed peerinfo into local memory
-    release read lock on peerinfo
+    get read lock on peerInfo
+    copy needed peerInfo into local memory
+    release read lock on peerInfo
     do required computation generally just a "findmax"
     return value
 ```
@@ -51,18 +51,18 @@ DHT logic can be internally separated into two parts:
 ## Periodic Logic:
 ```
     do while running:
-        get read lock on peerinfo
+        get read lock on peerInfo
         make local copy
-        release read lock on peerinfo
+        release read lock on peerInfo
         notify all peers
         sleep for a bit
-        get read lock on new_canidates
+        get read lock on new_candidates
         make a local copy
-        release read lock on new_canidates
-        new_peerlist = pick_new_peerlist(peerinfo_copy + new_canidates_copy)
-        get write lock on peerinfo
-        write new_peerlist over peerinfo
-        release write lock on peerinfo
+        release read lock on new_candidates
+        new_peerlist = pick_new_peerlist(peerInfo_copy + new_candidates_copy)
+        get write lock on peerInfo
+        write new_peerlist over peerInfo
+        release write lock on peerInfo
         sleep for a bit
 
 ```
@@ -83,48 +83,48 @@ MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
 
 
 class DHTLogic(object):
-    def __init__(self, peerinfo):
+    def __init__(self, peerInfo):
         self.network = None
-        self.short_peers = []
-        self.long_peers = []
-        self.seekCanidates = []
-        self.notified_me = []
-        self.loc2peerTable = {}
-        self.info = peerinfo
-        self.loc = space.id_to_point(2, self.info.id)
-        self.maintenance_thread = None
+        self.shortPeers = []
+        self.longPeers = []
+        self.seekCandidates = []
+        self.notifiedMe = []
+        self.loc2PeerTable = {}
+        self.info = peerInfo
+        self.loc = space.idToPoint(2, self.info.id)
+        self.maintenanceThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
         self.mode = "OFFLINE" #replace with enum?
 
     def setup(self, network):
         self.network = network
-        self.maintenance_thread= DHTMaintenceWorker(self)
+        self.maintenanceThread= DHTMaintenceWorker(self)
         return True
 
     def join(self,peer):
         #seek for insertion point
-        found_peers = set([peer])
-        best_parent = peer
-        new_best = None
-        while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
-            new_best = self.network.seek(best_parent,self.info.id)
-            found_peers.add(new_best)
-            best_parent = new_best
-        inital_peers = self.network.getPeers(best_parent)
-        if inital_peers:
-            for p in inital_peers:
-                found_peers.add(p)
+        foundPeers = set([peer])
+        bestParent = peer
+        newBest = None
+        while newBest is None or bestParent.id != newBest.id: #comparison on remoteids?
+            newBest = self.network.seek(bestParent,self.info.id)
+            foundPeers.add(newBest)
+            bestParent = newBest
+        initialPeers = self.network.getPeers(bestParent)
+        if initialPeers:
+            for p in initialPeers:
+                foundPeers.add(p)
         with self.peersLock:
-            self.short_peers = list(found_peers)
+            self.shortPeers = list(foundPeers)
         #print("done join, staring worker")
-        self.maintenance_thread.start()
+        self.maintenanceThread.start()
         return True
 
     def shutdown(self):
-        self.maintenance_thread.running = False
+        self.maintenanceThread.running = False
         #sanity check the following
-        with self.maintenance_thread.runningLock:
+        with self.maintenanceThread.runningLock:
             pass
         return True
 
@@ -132,22 +132,22 @@ class DHTLogic(object):
         return self.seek(id) == self.loc
 
     def seek(self,id):
-        loc = space.id_to_point(2,id)
-        canidates = None
+        loc = space.idToPoint(2,id)
+        candidates = None
         with self.peersLock:
-            canidates = self.seekCanidates
-        bestloc = space.getClosest(loc,canidates)
-        peer = self.loc2peerTable[bestloc]
+            candidates = self.seekCandidates
+        bestLoc = space.getClosest(loc,candidates)
+        peer = self.loc2PeerTable[bestLoc]
         return peer
 
     def getPeers(self):
         with self.peersLock:
-            return self.short_peers[:] + self.long_peers[:]
+            return self.shortPeers[:] + self.longPeers[:]
 
     def getNotified(self,origin):
         #print("GOT NOTIFIED",origin)
         with self.notifiedLock:
-            self.notified_me.append(origin)
+            self.notifiedMe.append(origin)
         return True
 
 
@@ -161,60 +161,60 @@ class DHTMaintenceWorker(threading.Thread):
     def run(self):
         with self.runningLock:
 
-            peerCanidates = None
+            peerCandidates = None
             while self.running:
                 #print("myinfo",self.parent.info)
                 #print("Worker Tick Start")
                 #"Notify all my short peers"
-                peerCanidateSet = set()
+                peerCandidateSet = set()
                 with self.parent.peersLock:
                     #print("got peer lock")
-                    peerCanidateSet += set(self.parent.short_peers[:]+self.parent.long_peers[:])
+                    peerCandidateSet += set(self.parent.shortPeers[:]+self.parent.longPeers[:])
 
-                assert(self.parent.info not in peerCanidateSet)
+                assert(self.parent.info not in peerCandidateSet)
                 #print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
-                    peerCanidateSet += set(self.parent.notified_me)
-                    self.parent.notified_me = []
+                    peerCandidateSet += set(self.parent.notifiedMe)
+                    self.parent.notifiedMe = []
 
-                for p in set(peerCanidateSet): #Cull anybody who fails a ping
+                for p in set(peerCandidateSet): #Cull anybody who fails a ping
                     if not self.parent.network.ping(p) == True:
-                        peerCanidateSet.remove(p)
+                        peerCandidateSet.remove(p)
                     #TODO: make parallel
 
                 points = []
-                locdict = {}
+                locDict = {}
 
                 #print(peers_2_keep)
-                for p in set(peerCanidateSet):
-                    l = space.id_to_point(2,p.id)
+                for p in set(peerCandidateSet):
+                    l = space.idToPoint(2,p.id)
                     points.append(l)
-                    locdict[l] = p
-                locdict[self.parent.loc] = self.parent.info
+                    locDict[l] = p
+                locDict[self.parent.loc] = self.parent.info
                 newShortLocsList = space.getDelaunayPeers(points,self.parent.loc)
-                newShortPeersList = [locdict[x] for x in newShortLocsList]
-                leftoversList = list(peerCanidateSet-set(newShortPeersList))
+                newShortPeersList = [locDict[x] for x in newShortLocsList]
+                leftoversList = list(peerCandidateSet-set(newShortPeersList))
 
                 if len(newShortPeersList)<MIN_SHORTPEERS and len(leftoversList)>0:
                     leftoverLocsList = list(set(points)-set(newShortLocsList))
                     sortedLeftoverLocsList = sorted()
                     needed = min((len(leftovers),MIN_SHORTPEERS))
                     newShortPeerLocsList = leftoverLocsList[:needed]
-                    newShortPeersList += [locdict[x] for x in newShortPeerLocsList]
+                    newShortPeersList += [locDict[x] for x in newShortPeerLocsList]
                     if needed < len(leftoversList):
-                        leftoversList = [locdict[x] for x in sortedLeftoverLocsList[needed:]]
+                        leftoversList = [locDict[x] for x in sortedLeftoverLocsList[needed:]]
                 if len(leftoversList) > MAX_LONGPEERS:
                     leftoversList = random.sample(leftoversList,MAX_LONGPEERS)
 
                 with self.parent.peersLock:
-                    self.parent.short_peers = new_short_peers
-                    self.parent.long_peers = leftovers
-                    self.parent.seekCanidates = points + [self.parent.loc]
-                    self.parent.loc2peerTable = locdict
+                    self.parent.shortPeers = newShortPeers
+                    self.parent.longPeers = leftovers
+                    self.parent.seekCandidates = points + [self.parent.loc]
+                    self.parent.loc2PeerTable = locDict
 
-                for p in new_short_peers:
-                    peerCanidateSet+=set(self.parent.network.GetPeers(p))
+                for p in newShortPeers:
+                    peerCandidateSet+=set(self.parent.network.GetPeers(p))
                     #TODO make parallel
 
                 time.sleep(MAINTENANCE_SLEEP_PERIOD)
