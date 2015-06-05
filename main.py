@@ -33,6 +33,7 @@ if __name__=="__main__":
 
 	net = NetworkClass.Networking(ip,port)
 
+
 	data = DataBaseClass.DataBase()
 
 
@@ -52,7 +53,6 @@ if __name__=="__main__":
 	hashid = genHash(path,0x11)
 
 	
-
 	myPeerInfo = util.PeerInfo(hashid,path)
 
 	
