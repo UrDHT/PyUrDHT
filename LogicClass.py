@@ -119,7 +119,7 @@ class DHTLogic(object):
             with self.peersLock:
                 self.short_peers = list(found_peers)
             #print("done join, staring worker")
-        self.maintenance_thread.start()
+        self.maintenanceThread.start()
         return True
 
     def shutdown(self):
