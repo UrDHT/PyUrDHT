@@ -101,22 +101,23 @@ class DHTLogic(object):
         self.maintenance_thread= DHTMaintenceWorker(self)
         return True
 
-    def join(self,peer):
+    def join(self,peers):
         #seek for insertion point
-        found_peers = set([peer])
-        best_parent = peer
-        new_best = None
-        while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
-            new_best = self.network.seek(best_parent,self.info.id)
-            found_peers.add(new_best)
-            best_parent = new_best
-        inital_peers = self.network.getPeers(best_parent)
-        if inital_peers:
-            for p in inital_peers:
-                found_peers.add(p)
-        with self.peersLock:
-            self.short_peers = list(found_peers)
-        #print("done join, staring worker")
+        if peers:
+            found_peers = set(peers)
+            best_parent = peers[0]
+            new_best = None
+            while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
+                new_best = self.network.seek(best_parent,self.info.id)
+                found_peers.add(new_best)
+                best_parent = new_best
+            inital_peers = self.network.getPeers(best_parent)
+            if inital_peers:
+                for p in inital_peers:
+                    found_peers.add(p)
+            with self.peersLock:
+                self.short_peers = list(found_peers)
+            #print("done join, staring worker")
         self.maintenance_thread.start()
         return True
 
