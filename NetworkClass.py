@@ -55,14 +55,17 @@ class Networking(object):
 
 	def getIP(self,remote):
 		
-		r = requests.get(remote.addr+"/api/v0/peer/getmyIP")
+		r = requests.get(remote.addr+"api/v0/peer/getmyIP")
 		ip = r.text
 		return ip
 
 	def ping(self,remote):
 		#print("SENDING NOTIFY",remote,origin)
+		print("ping")
 		try:
+			print("trying",remote.addr+"api/v0/peer/ping")
 			r = requests.get(remote.addr+"api/v0/peer/ping")
+			print(r.text)
 			return r.status_code == requests.codes.ok
 		except:
 			return False

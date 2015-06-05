@@ -105,6 +105,7 @@ class DHTLogic(object):
     def join(self,peers):
         #seek for insertion point
         if peers:
+            print("Joining Network")
             found_peers = set(peers)
             best_parent = peers[0]
             new_best = None
@@ -117,7 +118,8 @@ class DHTLogic(object):
                 for p in inital_peers:
                     found_peers.add(p)
             with self.peersLock:
-                self.short_peers = list(found_peers)
+                self.shortPeers = list(found_peers)
+            print("joined with:",list(found_peers))
             #print("done join, staring worker")
         self.maintenanceThread.start()
         return True
@@ -164,15 +166,18 @@ class DHTMaintenceWorker(threading.Thread):
     def run(self):
         with self.runningLock:
 
-            peerCandidates = None
+            peerCandidateSet = set()
             while self.running:
+                print("short",self.parent.shortPeers)
                 #print("myinfo",self.parent.info)
                 #print("Worker Tick Start")
                 #"Notify all my short peers"
-                peerCandidateSet = set()
                 with self.parent.peersLock:
                     #print("got peer lock")
                     peerCandidateSet.update( set(self.parent.shortPeers[:]+self.parent.longPeers[:]))
+
+                
+                print(peerCandidateSet)
 
                 peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet))
                 assert(self.parent.info not in peerCandidateSet)
@@ -181,6 +186,8 @@ class DHTMaintenceWorker(threading.Thread):
                 with self.parent.notifiedLock:
                     peerCandidateSet.update(set(self.parent.notifiedMe))
                     self.parent.notifiedMe = []
+
+                
 
                 for p in set(peerCandidateSet): #Cull anybody who fails a ping
                     if not self.parent.network.ping(p) == True:
@@ -211,6 +218,8 @@ class DHTMaintenceWorker(threading.Thread):
                 if len(leftoversList) > MAX_LONGPEERS:
                     leftoversList = random.sample(leftoversList,MAX_LONGPEERS)
 
+
+
                 with self.parent.peersLock:
                     self.parent.shortPeers = newShortPeersList
                     self.parent.longPeers = leftoversList
@@ -218,7 +227,8 @@ class DHTMaintenceWorker(threading.Thread):
                     self.parent.loc2PeerTable = locDict
 
                 for p in newShortPeersList:
-                    peerCandidateSet+=set(self.parent.network.GetPeers(p))
+                    self.parent.network.notify(p,self.parent.info)
+                    peerCandidateSet.update(set(self.parent.network.getPeers(p)))
                     #TODO make parallel
 
                 time.sleep(MAINTENANCE_SLEEP_PERIOD)
