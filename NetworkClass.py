@@ -52,3 +52,8 @@ class Networking(object):
 			print("The Post failed")
 			return False
 
+	def getIP(self,remote):
+		
+		r = requests.get(remote.addr+"/api/v0/peer/getmyIP")
+		ip = r.text
+		return ip
