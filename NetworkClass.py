@@ -52,13 +52,13 @@ class Networking(object):
 			print("The Post failed")
 			return False
 
-<<<<<<< HEAD
+
 	def getIP(self,remote):
 		
 		r = requests.get(remote.addr+"/api/v0/peer/getmyIP")
 		ip = r.text
 		return ip
-=======
+
 	def ping(self,remote):
 		#print("SENDING NOTIFY",remote,origin)
 		try:
@@ -66,4 +66,3 @@ class Networking(object):
 			return r.status_code == requests.codes.ok
 		except:
 			return False
->>>>>>> e992923aefc97c62cfac4023456e72818d399e6e
