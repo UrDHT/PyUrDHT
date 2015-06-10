@@ -5,16 +5,17 @@ class PeerInfo(object):
 
         right now UrDHT is not enforcing a mapping of hashIDs to servers
     """
-    def __init__(self,hashID,addr):
+    def __init__(self,hashID,addr,wsAddr):
         """
             hashID is a string encoded in multihash format
             addr is whatever the network module needs to connect
         """
         self.id = hashID
         self.addr = addr
+        self.wsAddr = wsAddr
 
     def __str__(self):
-        return """{"id":"%s", "addr":"%s"}"""%(self.id,self.addr)
+        return """{"id":"%s", "addr":"%s", "wsAddr":"%s"}"""%(self.id,self.addr,self.wsAddr)
 
     def __hash__(self):
         return hash((hash(self.id),hash(self.addr)))

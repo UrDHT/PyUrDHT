@@ -31,6 +31,10 @@ if __name__=="__main__":
 	ip = config["bindAddr"]
 	port = config["bindPort"]
 
+	wsip = config["wsBindAddr"]
+	wsport = config["wsBindPort"]
+	wsPath = config["wsAddr"]
+
 	net = NetworkClass.Networking(ip,port)
 
 
@@ -39,7 +43,7 @@ if __name__=="__main__":
 
 	bootstraps = jsonLoad(config["bootstraps"])
 	
-	peerPool = [util.PeerInfo(x["id"],x["addr"]) for x in bootstraps]
+	peerPool = [util.PeerInfo(x["id"],x["addr"],x["wsAddr"]) for x in bootstraps]
 
 	peerPool = list(filter(lambda x: net.ping(x), peerPool))#filter only living bootstrap peers
 
@@ -53,7 +57,7 @@ if __name__=="__main__":
 	hashid = genHash(path,0x11)
 
 	
-	myPeerInfo = util.PeerInfo(hashid,path)
+	myPeerInfo = util.PeerInfo(hashid,path, wsPath)
 
 	
 	logic = LogicClass.DHTLogic(myPeerInfo)
