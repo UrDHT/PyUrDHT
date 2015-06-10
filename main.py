@@ -7,6 +7,8 @@ from pymultihash import genHash
 import json
 import random
 
+import websocketProxy
+from multiprocessing import Process
 
 import argparse
 
@@ -71,3 +73,8 @@ if __name__=="__main__":
 
 	print("Node up and Running")
 	print(myPeerInfo)
+
+	p = Process(target=lambda: websocketProxy.main(wsip, wsport, path+"/api/v0/client/"))
+	p.start()
+
+	print("started websocket proxy")
