@@ -5,43 +5,65 @@ import util
 from pymultihash import genHash
 import sys
 import json
+import random
+
+
+import argparse
+
+def jsonLoad(fname):
+	with open(fname,"r") as fp:
+		return json.load(fp)
+
 
 if __name__=="__main__":
-	ip = "127.0.0.1"
-	port = 8080
-	bootstrap = None
-	if len(sys.argv)>1:
-		url = sys.argv[1].split(":")
-		ip = url[0]
-		port = int(url[1])
-	if len(sys.argv)>2:
-		url = json.loads("""{"id":"31V1kNSUfDXD7eZKtd7MWuHFUUyo", "addr":"http://45.79.205.125:8000/"}""")
-		bootstrap = util.PeerInfo(url["id"],url["addr"])
-		print("bootstrap!",bootstrap)
-		
+
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--config",default="./config.json",help="Use a specific configuration file")
+	args = parser.parse_args()
+
+	configpath = "./config.json"
+	if args.config:
+		configpath = args.config
+	config = jsonLoad(configpath)
 	
 
+	ip = config["bindAddr"]
+	port = config["bindPort"]
 
+	net = NetworkClass.Networking(ip,port)
 
-	path = "http://%s:%d/"%(ip,port)
-	hashid = genHash(path,0x11)
-
-	
-
-	peerinfo = util.PeerInfo(hashid,path)
-
-	print(peerinfo)
-
-	if bootstrap is None:
-		bootstrap = peerinfo
-
-	logic = LogicClass.DHTLogic(peerinfo)
-
-	net = NetworkClass.Networking("0.0.0.0",port)
 
 	data = DataBaseClass.DataBase()
 
-	logic.setup(net)
+
+	bootstraps = jsonLoad(config["bootstraps"])
+	
+	peerPool = [util.PeerInfo(x["id"],x["addr"]) for x in bootstraps]
+
+	peerPool = list(filter(lambda x: net.ping(x), peerPool))#filter only living bootstrap peers
+
+
+	path = config["publicAddr"]
+	if len(path) == 0 and len(peers) > 0:
+		random_peer = random.choice(peerPool)
+		pubip = net.getIP(random_peer)
+		path = "http://%s:%d" % (pubip, port)
+
+	hashid = genHash(path,0x11)
+
+	
+	myPeerInfo = util.PeerInfo(hashid,path)
+
+	
+	logic = LogicClass.DHTLogic(myPeerInfo)
+
 	net.setup(logic,data)
 
-	logic.join(bootstrap)
+	logic.setup(net)
+	
+
+	logic.join(peerPool)
+
+	print("Node up and Running")
+	print(myPeerInfo)

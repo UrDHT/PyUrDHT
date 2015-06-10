@@ -13,11 +13,11 @@ import util
 
 class Networking(object):
 	def __init__(self,ip,port):
-		self.serverthread = server.getThread(ip,port)
-		self.serverthread.start()
+		self.serverThread = server.getThread(ip,port)
+		self.serverThread.start()
 
 	def setup(self,logic,data):
-		server.setlinks(logic,data)
+		server.setLinks(logic,data)
 
 	def seek(self,remote,id):
 		path = remote.addr+"api/v0/peer/"+"seek/%s" % id 
@@ -38,8 +38,8 @@ class Networking(object):
 		if len(r.json()) == 0:
 			return []
 		for p in r.json():
-			newpeer = util.PeerInfo(p["id"],p["addr"])
-			result.append(newpeer)
+			newPeer = util.PeerInfo(p["id"],p["addr"])
+			result.append(newPeer)
 		return result
 
 	def notify(self,remote,origin):
@@ -52,3 +52,20 @@ class Networking(object):
 			print("The Post failed")
 			return False
 
+
+	def getIP(self,remote):
+		
+		r = requests.get(remote.addr+"api/v0/peer/getmyIP")
+		ip = r.text
+		return ip
+
+	def ping(self,remote):
+		#print("SENDING NOTIFY",remote,origin)
+		print("ping")
+		try:
+			print("trying",remote.addr+"api/v0/peer/ping")
+			r = requests.get(remote.addr+"api/v0/peer/ping")
+			print(r.text)
+			return r.status_code == requests.codes.ok
+		except:
+			return False
