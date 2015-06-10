@@ -3,7 +3,7 @@ import DataBaseClass
 import LogicClass
 import util
 from pymultihash import genHash
-import sys
+
 import json
 import random
 
