@@ -75,6 +75,8 @@ import EuclidianSpaceMath as space
 import threading
 import queue
 import time
+import random
+
 
 MAX_LONGPEERS = 200
 MIN_SHORTPEERS = 10
@@ -107,8 +109,12 @@ class DHTLogic(object):
         if peers:
             print("Joining Network")
             found_peers = set(peers)
-            best_parent = peers[0]
+            # Assuming we use a bootstrap list, 
+            # we shouldn't always select the first. 
+            # Bad load balancing karma
+            best_parent = random.choice(peers)  
             new_best = None
+
             while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
                 new_best = self.network.seek(best_parent,self.info.id)
                 found_peers.add(new_best)
