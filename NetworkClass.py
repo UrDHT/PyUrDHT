@@ -25,7 +25,7 @@ class Networking(object):
 
 		
 		results = r.json()
-		return util.PeerInfo(results["id"],results["addr"])
+		return util.PeerInfo(results["id"],results["addr"],results["wsAddr"])
 
 	def getPeers(self,remote):
 		
@@ -38,7 +38,7 @@ class Networking(object):
 		if len(r.json()) == 0:
 			return []
 		for p in r.json():
-			newPeer = util.PeerInfo(p["id"],p["addr"])
+			newPeer = util.PeerInfo(p["id"],p["addr"],p["wsAddr"])
 			result.append(newPeer)
 		return result
 

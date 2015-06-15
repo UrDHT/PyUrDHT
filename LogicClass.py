@@ -209,9 +209,9 @@ class DHTMaintenceWorker(threading.Thread):
 
                 if len(newShortPeersList)<MIN_SHORTPEERS and len(leftoversList)>0:
                     leftoverLocsList = list(set(points)-set(newShortLocsList))
-                    sortedLeftoverLocsList = sorted()
-                    needed = min((len(leftovers),MIN_SHORTPEERS))
-                    newShortPeerLocsList = leftoverLocsList[:needed]
+                    sortedLeftoverLocsList = sorted(leftoverLocsList)
+                    needed = min((len(leftoversList),MIN_SHORTPEERS))
+                    newShortPeerLocsList = sortedLeftoverLocsList[:needed]
                     newShortPeersList += [locDict[x] for x in newShortPeerLocsList]
                     if needed < len(leftoversList):
                         leftoversList = [locDict[x] for x in sortedLeftoverLocsList[needed:]]

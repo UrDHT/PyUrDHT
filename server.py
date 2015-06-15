@@ -82,7 +82,8 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             jsonDict = json.loads(str(data,"UTF-8"))
             addr = jsonDict["addr"]
             hashID = jsonDict["id"]
-            myLogic.getNotified(PeerInfo(hashID,addr))
+            wsAddr = jsonDict["wsAddr"]
+            myLogic.getNotified(PeerInfo(hashID,addr,wsAddr))
             self.wfile.write(b"[]")
 
 def getThread(ip='0.0.0.0',port=8000):
