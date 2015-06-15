@@ -25,10 +25,12 @@ def setLinks(logic,db):
     myDB = db
 
 class RESTHandler(http.server.BaseHTTPRequestHandler):
-    def do_HEAD(s):
-        s.send_response(200)
-        s.send_header("Content-type", "application/json")
-        s.end_headers()
+    def do_HEAD(self):
+        """Reply with OK and send headers"""
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+
     def do_GET(self):
         self.do_HEAD()
         #self.wfile.write(b"HTTP/1.1 200 OK\n")
