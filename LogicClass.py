@@ -93,7 +93,7 @@ class DHTLogic(object):
         self.loc2PeerTable = {}
         self.info = peerInfo
         self.loc = space.idToPoint(2, self.info.id)
-        self.maintenanceThread = None
+        self.janitorThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
         self.mode = "OFFLINE" #replace with enum?
@@ -104,7 +104,7 @@ class DHTLogic(object):
         After setting network, we can create the Maintenance thread, but not start it
         """
         self.network = network
-        self.maintenanceThread= DHTMaintenanceWorker(self)
+        self.janitorThread= DHTJanitor(self)
         return True
 
     def join(self,peers):
@@ -137,7 +137,7 @@ class DHTLogic(object):
                 self.shortPeers = list(found_peers)
             print("joined with:",list(found_peers))
             #print("done join, staring worker")
-        self.maintenanceThread.start()
+        self.janitorThread.start()
         return True
 
     def shutdown(self):
@@ -145,9 +145,9 @@ class DHTLogic(object):
         Kills the maintenance thread, waits for the thread to realize it.
         Returns True when done
         """
-        self.maintenanceThread.running = False
+        self.janitorThread.running = False
         #sanity check the following
-        with self.maintenanceThread.runningLock:
+        with self.janitorThread.runningLock:
             pass
         return True
 
@@ -166,13 +166,13 @@ class DHTLogic(object):
         Essentially, seek(key) is a single step of a lookup(key) operation.
         Throw seek into a loop and you have iterative lookup! 
         """
-        loc = space.idToPoint(2,key)
+        loc = space.idToPoint(2, key)
         candidates = None
         with self.peersLock:
             candidates = self.seekCandidates
-        if len(candidates) ==0:
-            return self.info
-        bestLoc = space.getClosest(loc,candidates)
+        if len(candidates) == 0:
+            return self.info  # as Toad would say, "I'm the best!" 
+        bestLoc = space.getClosest(loc, candidates)
         peer = self.loc2PeerTable[bestLoc]
         return peer
 
@@ -184,23 +184,45 @@ class DHTLogic(object):
         with self.peersLock:
             return self.shortPeers[:] + self.longPeers[:]
 
-    def getNotified(self,origin):
+    def getNotified(self, origin):
+        """
+        A node called has origin has just notified me it exists.
+        
+        The purpose of this depends on the DHT.
+        Example in Chord: I exist and I think you're my successor.
+        """
         #print("GOT NOTIFIED",origin)
         with self.notifiedLock:
             self.notifiedMe.append(origin)
         return True
 
 
-class DHTMaintenanceWorker(threading.Thread):
-    def __init__(self,parent):
+class DHTJanitor(threading.Thread):
+    """
+    DHTJanitor (who I will call janitor from now on) is a thread.
+    Like the real life equivalent, our janitor is responsible for cleaning up.
+    
+    The messes here are inconsistancies in the DHT topology as a whole, caused
+    by churn. 
+    Now our janitor can't fix the network
+    
+    """
+    
+    def __init__(self, parent):
+        """
+        Initialized the janitor with parent as the node that created it.
+        """
         threading.Thread.__init__(self)
         self.parent = parent
         self.running = True
         self.runningLock = threading.Lock()
 
     def run(self):
+        """
+        Starts the thread
+        Needs to be split into more methods
+        """
         with self.runningLock:
-
             peerCandidateSet = set()
             while self.running:
                 print("short",self.parent.shortPeers)
@@ -214,8 +236,8 @@ class DHTMaintenanceWorker(threading.Thread):
                 
                 print(peerCandidateSet)
 
-                peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet))
-                assert(self.parent.info not in peerCandidateSet)
+                peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet)) #everyone who is not me
+                assert(self.parent.info not in peerCandidateSet) #everyone who is not me
                 #print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:
