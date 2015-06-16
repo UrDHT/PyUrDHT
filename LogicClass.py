@@ -82,10 +82,9 @@ MAX_LONGPEERS = 200
 MIN_SHORTPEERS = 10
 MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
 
-
-
 class DHTLogic(object):
     def __init__(self, peerInfo):
+        """Initializes the node with a PeerInfo object"""
         self.network = None
         self.shortPeers = []
         self.longPeers = []
@@ -100,12 +99,23 @@ class DHTLogic(object):
         self.mode = "OFFLINE" #replace with enum?
 
     def setup(self, network):
+        """
+        network: Network object, the means by which the node can communicate.
+        After setting network, we can create the Maintenance thread, but not start it
+        """
         self.network = network
-        self.maintenanceThread= DHTMaintenceWorker(self)
+        self.maintenanceThread= DHTMaintenanceWorker(self)
         return True
 
     def join(self,peers):
-        #seek for insertion point
+        """
+        peers: some list of peers, which are other nodes on the network.  
+        peers is most likely a list of nodes for bootstrapping, a specific list
+        which was included in the config file. 
+         
+        join joins the network which peers is on.
+        We use a random peer from peers to seek for the node currently resonsible for my id
+        """
         if peers:
             print("Joining Network")
             found_peers = set(peers)
@@ -131,17 +141,32 @@ class DHTLogic(object):
         return True
 
     def shutdown(self):
+        """
+        Kills the maintenance thread, waits for the thread to realize it.
+        Returns True when done
+        """
         self.maintenanceThread.running = False
         #sanity check the following
         with self.maintenanceThread.runningLock:
             pass
         return True
 
-    def doIOwn(self,id):
-        return self.seek(id) == self.loc
+    def doIOwn(self,key):
+        """
+        Looks to see if I own some key.  
+        If seek returns myself, then I'm the closest
+        """
+        return self.seek(key) == self.loc
 
-    def seek(self,id):
-        loc = space.idToPoint(2,id)
+    def seek(self,key):
+        """
+        Answers the question: of the nodes I know, which is the closest to key?
+        Key is some key we are looking for.
+        
+        Essentially, seek(key) is a single step of a lookup(key) operation.
+        Throw seek into a loop and you have iterative lookup! 
+        """
+        loc = space.idToPoint(2,key)
         candidates = None
         with self.peersLock:
             candidates = self.seekCandidates
@@ -152,6 +177,10 @@ class DHTLogic(object):
         return peer
 
     def getPeers(self):
+        """
+        Returns a list of all the peers I know.
+        In otherwords, my neighbors and my shortcuts
+        """
         with self.peersLock:
             return self.shortPeers[:] + self.longPeers[:]
 
@@ -162,7 +191,7 @@ class DHTLogic(object):
         return True
 
 
-class DHTMaintenceWorker(threading.Thread):
+class DHTMaintenanceWorker(threading.Thread):
     def __init__(self,parent):
         threading.Thread.__init__(self)
         self.parent = parent
