@@ -90,7 +90,7 @@ class DHTLogic(object):
         self.longPeers = []
         self.seekCandidates = []
         self.notifiedMe = []
-        self.loc2PeerTable = {}
+        self.locPeerDict = {}
         self.info = peerInfo
         self.loc = space.idToPoint(2, self.info.id)
         self.janitorThread = None
@@ -173,7 +173,7 @@ class DHTLogic(object):
         if len(candidates) == 0:
             return self.info  # as Toad would say, "I'm the best!" 
         bestLoc = space.getClosest(loc, candidates)
-        peer = self.loc2PeerTable[bestLoc]
+        peer = self.locPeerDict[bestLoc]
         return peer
 
     def getPeers(self):
@@ -281,7 +281,7 @@ class DHTJanitor(threading.Thread):
                     self.parent.shortPeers = newShortPeersList
                     self.parent.longPeers = leftoversList
                     self.parent.seekCandidates = points + [self.parent.loc]
-                    self.parent.loc2PeerTable = locDict
+                    self.parent.locPeerDict = locDict
 
                 for p in newShortPeersList:
                     self.parent.network.notify(p,self.parent.info)

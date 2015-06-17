@@ -32,6 +32,10 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        """
+        Holy boilerplate, Batman!
+        """
+
         self.do_HEAD()
         #self.wfile.write(b"HTTP/1.1 200 OK\n")
         if None != re.search('/api/v0/client/seek/*', self.path):
