@@ -204,7 +204,8 @@ class DHTJanitor(threading.Thread):
     
     The messes here are inconsistancies in the DHT topology as a whole, caused
     by churn. 
-    Now our janitor can't fix the network
+    Now our janitor can't fix the entire network topology by himself, 
+    but he can clean up the inaccuracies that are relatively local. 
     
     """
     
@@ -240,7 +241,7 @@ class DHTJanitor(threading.Thread):
                 assert(self.parent.info not in peerCandidateSet) #everyone who is not me
                 #print("thinking")
                 #"Re-evaluate my peerlist"
-                with self.parent.notifiedLock:
+                with self.parent.notifiedLock:  #functionize into handleNotifies
                     peerCandidateSet.update(set(self.parent.notifiedMe))
                     self.parent.notifiedMe = []
 
