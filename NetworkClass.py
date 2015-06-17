@@ -17,18 +17,22 @@ class Networking(object):
 		self.serverThread.start()
 
 	def setup(self,logic,data):
+		"""
+		Lets the server know which LogicClass and DataClass to use
+		"""
 		server.setLinks(logic,data)
 
 	def seek(self,remote,id):
+		"""
+		This function remotely calls seek on the remote node,
+		asking it to run LogicComponent.seek() on id
+		"""
 		path = remote.addr+"api/v0/peer/"+"seek/%s" % id 
 		r = requests.get(path)
-
-		
 		results = r.json()
 		return util.PeerInfo(results["id"],results["addr"],results["wsAddr"])
 
 	def getPeers(self,remote):
-		
 		r = requests.get(remote.addr+"api/v0/peer/getPeers/")
 		#print(r.text)
 		#print(r.text)
