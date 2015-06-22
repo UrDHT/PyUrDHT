@@ -10,6 +10,7 @@ import server
 import myrequests as requests
 import json
 import util
+from errors import *
 
 class Networking(object):
 	def __init__(self,ip,port):
@@ -28,22 +29,29 @@ class Networking(object):
 		asking it to run LogicComponent.seek() on id
 		"""
 		path = remote.addr+"api/v0/peer/"+"seek/%s" % id 
-		r = requests.get(path)
-		results = r.json()
-		return util.PeerInfo(results["id"],results["addr"],results["wsAddr"])
+		val = None
+		try:
+			r = requests.get(path)
+			results = r.json()
+			val = util.PeerInfo(results["id"],results["addr"],results["wsAddr"])
+		except Exception:
+			raise DialFailed()
+		return val
 
 	def getPeers(self,remote):
-		r = requests.get(remote.addr+"api/v0/peer/getPeers/")
-		#print(r.text)
-		#print(r.text)
-		#print(r.text)
-
 		result = []
-		if len(r.json()) == 0:
-			return []
-		for p in r.json():
-			newPeer = util.PeerInfo(p["id"],p["addr"],p["wsAddr"])
-			result.append(newPeer)
+		try:
+			r = requests.get(remote.addr+"api/v0/peer/getPeers/")
+			#print(r.text)
+			#print(r.text)
+			#print(r.text)
+			if len(r.json()) == 0:
+				return []
+			for p in r.json():
+				newPeer = util.PeerInfo(p["id"],p["addr"],p["wsAddr"])
+				result.append(newPeer)
+		except Exception:
+			raise DialFailed()
 		return result
 
 	def notify(self,remote,origin):
@@ -58,9 +66,12 @@ class Networking(object):
 
 
 	def getIP(self,remote):
-		
-		r = requests.get(remote.addr+"api/v0/peer/getmyIP")
-		ip = r.text
+		ip = None
+		try:
+			r = requests.get(remote.addr+"api/v0/peer/getmyIP")
+			ip = r.text
+		except:
+			raise DialFailed()
 		return ip
 
 	def ping(self,remote):
