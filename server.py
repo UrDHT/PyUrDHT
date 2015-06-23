@@ -55,6 +55,14 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
                 answer = bytes(result)
                 self.wfile.write(answer)
 
+        if None != re.search('/api/v0/client/poll/*/*', self.path):
+            recordID = self.path.split('/')[-2]
+            t = float(self.path.split('/')[-1])
+            result = myDB.poll(recordID,t)
+            if result:
+                answer = bytes(result)
+                self.wfile.write(answer)
+
         if None != re.search('/api/v0/peer/getPeers*', self.path):
             recordID = self.path.split('/')[-1]
             result_list = myLogic.getPeers()
@@ -77,6 +85,12 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             data = self.rfile.read(contentLen)
             recordID = self.path.split('/')[-1]
             myDB.store(recordID,data)
+
+        if None != re.search('/api/v0/client/post/*', self.path):
+            contentLen = int(self.headers.get_all('content-length')[0])
+            data = self.rfile.read(contentLen)
+            recordID = self.path.split('/')[-1]
+            myDB.post(recordID,data)
 
         elif None != re.search('/api/v0/peer/notify*', self.path):
             #print(self.path)
