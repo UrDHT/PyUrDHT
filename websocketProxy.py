@@ -35,6 +35,12 @@ def main(wsBindAddr,wsBindPort,hostPath):
 	    	newpath = ''.join((hostPath,"get/",seekarg))
 	    	r = requests.get(newpath)
 	    	output = r.text
+	    if cmd["method"] == "poll":
+	    	seekarg = cmd["id"]
+	    	t = seekarg = cmd["time"]
+	    	newpath = ''.join((hostPath,"poll/",seekarg,"/",string(t)))
+	    	r = requests.get(newpath)
+	    	output = r.text
 	    if cmd["method"] == "seek":
 	    	seekarg = cmd["id"]
 	    	newpath = ''.join((hostPath,"seek/",seekarg))
@@ -46,7 +52,12 @@ def main(wsBindAddr,wsBindPort,hostPath):
 	    	data = json.dumps(cmd["data"])
 	    	r = requests.post(newpath, data=data)
 	    	output = r.text
-
+	    if cmd["method"] == "post":
+	    	seekarg = cmd["id"]
+	    	newpath = ''.join((hostPath,"post/",seekarg))
+	    	data = json.dumps(cmd["data"])
+	    	r = requests.post(newpath, data=data)
+	    	output = r.text
 
 	    yield from websocket.send(output)
 
