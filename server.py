@@ -58,9 +58,9 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         if None != re.search('/api/v0/client/poll/*/*', self.path):
             recordID = self.path.split('/')[-2]
             t = float(self.path.split('/')[-1])
-            result = myDB.poll(recordID,t)
+            result = json.dumps(myDB.poll(recordID,t))
             if result:
-                answer = bytes(result)
+                answer = bytes(result,"UTF-8")
                 self.wfile.write(answer)
 
         if None != re.search('/api/v0/peer/getPeers*', self.path):

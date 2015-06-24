@@ -41,11 +41,6 @@ def main(wsBindAddr,wsBindPort,hostPath):
 	    	newpath = ''.join((hostPath,"poll/",seekarg,"/",string(t)))
 	    	r = requests.get(newpath)
 	    	output = r.text
-	    if cmd["method"] == "seek":
-	    	seekarg = cmd["id"]
-	    	newpath = ''.join((hostPath,"seek/",seekarg))
-	    	r = requests.get(newpath)
-	    	output = r.text
 	    if cmd["method"] == "store":
 	    	seekarg = cmd["id"]
 	    	newpath = ''.join((hostPath,"store/",seekarg))
