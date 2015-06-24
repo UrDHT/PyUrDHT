@@ -58,9 +58,9 @@ if __name__=="__main__":
 	if len(path) == 0 and len(peers) > 0:
 		random_peer = random.choice(peerPool)
 		pubip = net.getIP(random_peer)
-		path = "http://%s:%d" % (pubip, port)
+		path = "http://%s:%d/" % (pubip, port)
 
-	hashid = genHash(path,0x11)
+	hashid = genHash(path,0x12)
 
 	
 	myPeerInfo = util.PeerInfo(hashid,path, wsPath)
