@@ -90,7 +90,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             contentLen = int(self.headers.get_all('content-length')[0])
             data = self.rfile.read(contentLen)
             recordID = self.path.split('/')[-1]
-            myDB.post(recordID,data)
+            myDB.post(recordID,str(data,"UTF-8"))
 
         elif None != re.search('/api/v0/peer/notify*', self.path):
             #print(self.path)
