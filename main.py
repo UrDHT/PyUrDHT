@@ -5,10 +5,14 @@ import util
 from pymultihash import genHash
 
 import json
-import random
-
+import random, time
+import sys
 import websocketProxy
 from multiprocessing import Process
+if sys.platform == 'win32':
+    import multiprocessing.reduction    # make sockets pickable/inheritable
+
+
 
 import argparse
 
@@ -74,7 +78,7 @@ if __name__=="__main__":
 	print("Node up and Running")
 	print(myPeerInfo)
 
-	p = Process(target=lambda: websocketProxy.main(wsip, wsport, path+"/api/v0/client/"))
+	p = Process(target=websocketProxy.main, args=(wsip, wsport, path+"/api/v0/client/"),daemon=True)
 	p.start()
 
 	print("started websocket proxy")
