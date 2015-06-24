@@ -37,8 +37,8 @@ def main(wsBindAddr,wsBindPort,hostPath):
 	    	output = r.text
 	    if cmd["method"] == "poll":
 	    	seekarg = cmd["id"]
-	    	t = seekarg = cmd["time"]
-	    	newpath = ''.join((hostPath,"poll/",seekarg,"/",string(t)))
+	    	t = cmd["time"]
+	    	newpath = ''.join((hostPath,"poll/",seekarg,"/",str(t)))
 	    	r = requests.get(newpath)
 	    	output = r.text
 	    if cmd["method"] == "store":
