@@ -26,12 +26,13 @@ class DataBase(object):
         self.records[id] = val
 
     def post(self,id, val):
+        val = repr(val)
         if id in self.streams.keys():
             self.streams[id].append((time.time(),val))
         else:
-            self.streams[id][(time.time(),val)]
+            self.streams[id]=[(time.time(),val)]
     def poll(self, id, t):
         try:
-            return filter(lambda x: x[0]>t,self.streams[id])
+            return [x for x in filter(lambda x: x[0]>t,self.streams[id])]
         except:
             return []
