@@ -26,7 +26,7 @@ class DataBase(object):
         self.records[id] = val
 
     def post(self,id, val):
-        val = repr(val)
+        val = val
         if id in self.streams.keys():
             self.streams[id].append((time.time(),val))
         else:
