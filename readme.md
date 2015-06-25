@@ -20,7 +20,7 @@ Libraries this project depends on have been incorporated into this repository.
 
 config.json looks like this:
 
-'''
+```
 {
 	"bindAddr":"0.0.0.0", //set this to the interface you want the server to bind to
 	"bindPort":8000, //set this to the port you want the rest-server to run on
@@ -30,7 +30,7 @@ config.json looks like this:
 	"publicAddr":"http://127.0.0.1:8000/", //this should match the publicly accessible IP for your computer and bindPort
 	"wsAddr":"ws://127.0.0.1:8001" // similar to above, matching wsBindPort
 }
-'''
+```
 
 the "bindAddr" and "bindPort" indicate the network interface and port you want to bind to.
 "publicAddr" is a url where your server can be reached, it should use your public ip and port utilized by NAT or port forwarding. You can use DNS names if they are configured to reach your node.
