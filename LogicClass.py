@@ -22,7 +22,7 @@ The DHT Logic exposes:
 The DHT Logic Depends On:
 
 - Network Component: Allows communication with other nodes
-    - Seek(remote,id) 
+    - Seek(remote,id)
     - GetPeers(remote)
     - Notify(remote,origin)
 
@@ -108,22 +108,22 @@ class DHTLogic(object):
 
     def join(self,peers):
         """
-        peers: some list of peers, which are other nodes on the network.  
+        peers: some list of peers, which are other nodes on the network.
         peers is most likely a list of nodes for bootstrapping, a specific list
-        which was included in the config file. 
-         
+        which was included in the config file.
+
         join joins the network which peers is on.
         We use a random peer from peers to seek for the node currently resonsible for my id
         """
         if peers:
             print("Joining Network")
             found_peers = set(peers)
-            # Assuming we use a bootstrap list, 
-            # we shouldn't always select the first. 
+            # Assuming we use a bootstrap list,
+            # we shouldn't always select the first.
             # Bad load balancing karma
-            
-            patron_peer = random.choice(peers)  
-            best_parent = patron_peer 
+
+            patron_peer = random.choice(peers)
+            best_parent = patron_peer
             new_best = None
             try:
                 while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
@@ -158,7 +158,7 @@ class DHTLogic(object):
 
     def doIOwn(self,key):
         """
-        Looks to see if I own some key.  
+        Looks to see if I own some key.
         If seek returns myself, then I'm the closest
         """
         return self.seek(key) == self.loc
@@ -167,16 +167,16 @@ class DHTLogic(object):
         """
         Answers the question: of the nodes I know, which is the closest to key?
         Key is some key we are looking for.
-        
+
         Essentially, seek(key) is a single step of a lookup(key) operation.
-        Throw seek into a loop and you have iterative lookup! 
+        Throw seek into a loop and you have iterative lookup!
         """
         loc = space.idToPoint(2, key)
         candidates = None
         with self.peersLock:
             candidates = self.seekCandidates
         if len(candidates) == 0:
-            return self.info  # as Toad would say, "I'm the best!" 
+            return self.info  # as Toad would say, "I'm the best!"
         bestLoc = space.getClosest(loc, candidates)
         peer = self.locPeerDict[bestLoc]
         return peer
@@ -192,7 +192,7 @@ class DHTLogic(object):
     def getNotified(self, origin):
         """
         A node called has origin has just notified me it exists.
-        
+
         The purpose of this depends on the DHT.
         Example in Chord: I exist and I think you're my successor.
         """
@@ -206,14 +206,14 @@ class DHTJanitor(threading.Thread):
     """
     DHTJanitor (who I will call janitor from now on) is a thread.
     Like the real life equivalent, our janitor is responsible for cleaning up.
-    
+
     The messes here are inconsistancies in the DHT topology as a whole, caused
-    by churn. 
-    Now our janitor can't fix the entire network topology by himself, 
-    but he can clean up the inaccuracies that are relatively local. 
-    
+    by churn.
+    Now our janitor can't fix the entire network topology by himself,
+    but he can clean up the inaccuracies that are relatively local.
+
     """
-    
+
     def __init__(self, parent):
         """
         Initialized the janitor with parent as the node that created it.
@@ -239,7 +239,7 @@ class DHTJanitor(threading.Thread):
                     #print("got peer lock")
                     peerCandidateSet.update( set(self.parent.shortPeers[:]+self.parent.longPeers[:]))
 
-                
+
                 print(peerCandidateSet)
 
                 peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet)) #everyone who is not me
@@ -248,9 +248,9 @@ class DHTJanitor(threading.Thread):
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:  #functionize into handleNotifies
                     peerCandidateSet.update(set(self.parent.notifiedMe))
-                    
 
-                
+
+
 
                 for p in set(peerCandidateSet): #Cull anybody who fails a ping
                     if not self.parent.network.ping(p) == True:
@@ -273,7 +273,7 @@ class DHTJanitor(threading.Thread):
                 if len(newShortPeersList)<MIN_SHORTPEERS and len(leftoversList)>0:
                     leftoverLocsList = list(set(points)-set(newShortLocsList))
                     sortedLeftoverLocsList = sorted(leftoverLocsList)
-                    needed = min((len(leftoversList),MIN_SHORTPEERS))
+                    needed = min((len(leftoversList),MIN_SHORTPEERS-len(newShortPeersList)))
                     newShortPeerLocsList = sortedLeftoverLocsList[:needed]
                     newShortPeersList += [locDict[x] for x in newShortPeerLocsList]
                     if needed < len(leftoversList):
