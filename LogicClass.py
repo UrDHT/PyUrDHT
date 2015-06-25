@@ -96,7 +96,6 @@ class DHTLogic(object):
         self.janitorThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
-        self.mode = "OFFLINE" #replace with enum?
 
     def setup(self, network):
         """
@@ -122,14 +121,20 @@ class DHTLogic(object):
             # Assuming we use a bootstrap list, 
             # we shouldn't always select the first. 
             # Bad load balancing karma
-            best_parent = random.choice(peers)  
+            
+            patron_peer = random.choice(peers)  
+            best_parent = patron_peer 
             new_best = None
+            try:
+                while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
+                    new_best = self.network.seek(best_parent,self.info.id)
+                    found_peers.add(new_best)
+                    best_parent = new_best
+                inital_peers = self.network.getPeers(best_parent)
+            except DialFailed:
+                peers.remove(patron_peer)
+                self.join(peers)
 
-            while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
-                new_best = self.network.seek(best_parent,self.info.id)
-                found_peers.add(new_best)
-                best_parent = new_best
-            inital_peers = self.network.getPeers(best_parent)
             if inital_peers:
                 for p in inital_peers:
                     found_peers.add(p)
@@ -224,8 +229,8 @@ class DHTJanitor(threading.Thread):
         Needs to be split into more methods
         """
         with self.runningLock:
-            peerCandidateSet = set()
             while self.running:
+                peerCandidateSet = set()
                 print("short",self.parent.shortPeers)
                 #print("myinfo",self.parent.info)
                 #print("Worker Tick Start")
@@ -243,7 +248,7 @@ class DHTJanitor(threading.Thread):
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:  #functionize into handleNotifies
                     peerCandidateSet.update(set(self.parent.notifiedMe))
-                    self.parent.notifiedMe = []
+                    
 
                 
 
@@ -278,15 +283,29 @@ class DHTJanitor(threading.Thread):
 
 
 
+
+
+
+
+                for p in newShortPeersList:
+                    try:
+                        self.parent.network.notify(p,self.parent.info)
+                        peerCandidateSet.update(set(self.parent.network.getPeers(p)))
+                    except DialFailed:
+                        with self.parent.peersLock:
+                            self.parent.shortPeers.remove(p)
+                            self.parent.longPeers.remove(p)
+                        #with self.parent.notifiedLock:
+                        #    self.parent.notifiedMe = []
+                        continue
+                    #TODO make parallel
+
+
                 with self.parent.peersLock:
                     self.parent.shortPeers = newShortPeersList
                     self.parent.longPeers = leftoversList
                     self.parent.seekCandidates = points + [self.parent.loc]
                     self.parent.locPeerDict = locDict
-
-                for p in newShortPeersList:
-                    self.parent.network.notify(p,self.parent.info)
-                    peerCandidateSet.update(set(self.parent.network.getPeers(p)))
-                    #TODO make parallel
-
+                with self.parent.notifiedLock:
+                    self.parent.notifiedMe = []
                 time.sleep(MAINTENANCE_SLEEP_PERIOD)
