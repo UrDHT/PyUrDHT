@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+
+
+if __name__=="__main__":
+
+	import argparse
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('cmd', choices=['post', 'poll', 'store', 'get'])
+	parser.add_argument('target' help="target key value, will be hashed unless --multihash is used.")
+	parser.add_argument('-value', help="String value to be written, if absent data will be read from stdin")
+	parser.add_argument('--multihash',help="Interpret the target as a multihash literal")
+	args = parser.parse_args()
+
+	from UrClientPython import UrDHTClient
+
+	import json
+	import argparse
+
+
+	bootstraps = []
+	with open("../bootstrap.json","r") as fp:
+		bootstraps = json.load(fp)
+	dht = UrDHTClient("",bootstraps)
