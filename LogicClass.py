@@ -229,8 +229,8 @@ class DHTJanitor(threading.Thread):
         Needs to be split into more methods
         """
         with self.runningLock:
+            peerCandidateSet = set()
             while self.running:
-                peerCandidateSet = set()
                 print("short",self.parent.shortPeers)
                 #print("myinfo",self.parent.info)
                 #print("Worker Tick Start")
