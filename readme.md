@@ -9,7 +9,7 @@ Right now PyUrDHT is still in early development, and should be treated as such (
 
 ## Installation
 
-Ideally, PyUrDHT depends only on an install of Python3.
+Ideally, PyUrDHT depends only on an install of Python 3.4+.
 Libraries this project depends on have been incorporated into this repository.
 
 - Clone this repository
@@ -31,3 +31,7 @@ config.json looks like this:
 	"wsAddr":"ws://127.0.0.1:8001" // similar to above, matching wsBindPort
 }
 '''
+
+the "bindAddr" and "bindPort" indicate the network interface and port you want to bind to.
+"publicAddr" is a url where your server can be reached, it should use your public ip and port utilized by NAT or port forwarding. You can use DNS names if they are configured to reach your node.
+
