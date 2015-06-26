@@ -260,8 +260,10 @@ class DHTJanitor(threading.Thread):
                 def pingCheck(p):
                     if not self.parent.network.ping(p) == True:
                         peerCandidateSet.remove(p)
+                        print("Ping Failed",p)
                 threads = Threadpool(10)
-                threads.map(pingCheck,set(peerCandidateSet))
+                for x in threads.map(pingCheck,set(peerCandidateSet)):
+                    pass
 
                 points = []
                 locDict = {}
@@ -296,8 +298,10 @@ class DHTJanitor(threading.Thread):
                 def notifyAndGet(p):
                     try:
                         self.parent.network.notify(p,self.parent.info)
-                        peerCandidateSet.update(set(self.parent.network.getPeers(p)))
+                        newpeers = self.parent.network.getPeers(p)
+                        peerCandidateSet.update(set(newpeers))
                     except DialFailed:
+                        print("DIAL FAILED",p)
                         with self.parent.peersLock:
                             if p in self.parent.shortPeers:
                                 self.parent.shortPeers.remove(p)
@@ -307,7 +311,10 @@ class DHTJanitor(threading.Thread):
                         #    self.parent.notifiedMe = []
 
                 threads = Threadpool(10)
-                threads.map(notifyAndGet,set(newShortPeersList))
+                print("about to map")
+                for x in threads.map(notifyAndGet,set(newShortPeersList)):
+                    pass
+                print("done mapping")
 
 
                 with self.parent.peersLock:
