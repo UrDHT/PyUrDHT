@@ -291,7 +291,7 @@ class DHTJanitor(threading.Thread):
 
 
 
-
+                peerCandidateSet = set()
                 for p in newShortPeersList:
                     try:
                         self.parent.network.notify(p,self.parent.info)
