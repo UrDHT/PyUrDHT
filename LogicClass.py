@@ -76,6 +76,9 @@ import threading
 import queue
 import time
 import random
+from errors import *
+
+from threadpool import Threadpool
 
 
 MAX_LONGPEERS = 200
@@ -125,6 +128,7 @@ class DHTLogic(object):
             patron_peer = random.choice(peers)
             best_parent = patron_peer
             new_best = None
+            inital_peers = None
             try:
                 while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
                     new_best = self.network.seek(best_parent,self.info.id)
@@ -133,7 +137,8 @@ class DHTLogic(object):
                 inital_peers = self.network.getPeers(best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
-                self.join(peers)
+                return self.join(peers)
+
 
             if inital_peers:
                 for p in inital_peers:
@@ -252,10 +257,11 @@ class DHTJanitor(threading.Thread):
 
 
 
-                for p in set(peerCandidateSet): #Cull anybody who fails a ping
+                def pingCheck(p):
                     if not self.parent.network.ping(p) == True:
                         peerCandidateSet.remove(p)
-                    #TODO: make parallel
+                threads = Threadpool(10)
+                threads.map(pingCheck,set(peerCandidateSet))
 
                 points = []
                 locDict = {}
@@ -286,19 +292,22 @@ class DHTJanitor(threading.Thread):
 
 
 
-
-                for p in newShortPeersList:
+                peerCandidateSet = set()
+                def notifyAndGet(p):
                     try:
                         self.parent.network.notify(p,self.parent.info)
                         peerCandidateSet.update(set(self.parent.network.getPeers(p)))
                     except DialFailed:
                         with self.parent.peersLock:
-                            self.parent.shortPeers.remove(p)
-                            self.parent.longPeers.remove(p)
+                            if p in self.parent.shortPeers:
+                                self.parent.shortPeers.remove(p)
+                            if p in self.parent.longPeers:
+                                self.parent.longPeers.remove(p)
                         #with self.parent.notifiedLock:
                         #    self.parent.notifiedMe = []
-                        continue
-                    #TODO make parallel
+
+                threads = Threadpool(10)
+                threads.map(notifyAndGet,set(newShortPeersList))
 
 
                 with self.parent.peersLock:
