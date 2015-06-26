@@ -304,7 +304,7 @@ class DHTJanitor(threading.Thread):
                                 self.parent.longPeers.remove(p)
                         #with self.parent.notifiedLock:
                         #    self.parent.notifiedMe = []
-                        continue
+
                 threads = Threadpool(10)
                 threads.map(notifyAndGet,set(newShortPeersList))
 
