@@ -1,0 +1,19 @@
+# Dockerfile for running the PyUrDHT project
+# in an Arch Linux container
+
+FROM archlinux
+MAINTAINER Christopher Freas (https://github.com/nwautomator)
+
+# Grab all the packaged dependencies (Arch ships with Python 3
+# by default)
+RUN pacman --noconfirm -S  \
+    python \
+    python-requests \
+    git 
+
+# Clone the PyUrDHT project:
+RUN git clone --depth=1 https://github.com/UrDHT/PyUrDHT.git /home/pyurdht
+
+# Run it!
+RUN cd /home/pyurdht \
+    && python main.py

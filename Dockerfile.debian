@@ -1,0 +1,19 @@
+# Dockerfile for running the PyUrDHT project
+# in a Debian 8 container
+
+FROM debian:jessie
+MAINTAINER Christopher Freas (https://github.com/nwautomator)
+
+# Grab all the packaged dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-requests \
+    git \
+    --no-install-recommends
+
+# Clone the PyUrDHT project:
+RUN git clone --depth=1 https://github.com/UrDHT/PyUrDHT.git /home/pyurdht
+
+# Run it!
+RUN cd /home/pyurdht \
+    && python3 main.py

@@ -1,0 +1,21 @@
+# Dockerfile for running the PyUrDHT project
+# in a Fedora Linux container. Note that this
+# uses the new DNF package tool so it should 
+# be run on at least Fedora 18
+
+FROM fedora:latest
+MAINTAINER Christopher Freas (https://github.com/nwautomator)
+
+# Grab all the packaged dependencies (Arch ships with Python 3
+# by default)
+RUN dnf -y install  \
+    python3 \
+    python3-requests \
+    git 
+
+# Clone the PyUrDHT project:
+RUN git clone --depth=1 https://github.com/UrDHT/PyUrDHT.git /home/pyurdht
+
+# Run it!
+RUN cd /home/pyurdht \
+    && python3 main.py
