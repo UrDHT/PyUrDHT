@@ -12,7 +12,6 @@ class Threadpool(object):
         for t in tuples:
             self.input.put(t)
         def worker(func):
-            print("worker starting")
             while True:
                 try:
                     myargs = self.input.get(t,False)
@@ -28,3 +27,8 @@ class Threadpool(object):
         while not self.output.empty():
             yield self.output.get()
             self.output.task_done()
+
+if __name__ == "__main__":
+    t = Threadpool(5)
+    for x in t.map(print,range(20)):
+        pass
