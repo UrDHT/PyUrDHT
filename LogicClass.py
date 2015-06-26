@@ -234,8 +234,8 @@ class DHTJanitor(threading.Thread):
         Needs to be split into more methods
         """
         with self.runningLock:
+            peerCandidateSet = set()
             while self.running:
-                peerCandidateSet = set()
                 print("short",self.parent.shortPeers)
                 #print("myinfo",self.parent.info)
                 #print("Worker Tick Start")
@@ -253,6 +253,7 @@ class DHTJanitor(threading.Thread):
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:  #functionize into handleNotifies
                     peerCandidateSet.update(set(self.parent.notifiedMe))
+
 
 
 
@@ -278,7 +279,7 @@ class DHTJanitor(threading.Thread):
                 if len(newShortPeersList)<MIN_SHORTPEERS and len(leftoversList)>0:
                     leftoverLocsList = list(set(points)-set(newShortLocsList))
                     sortedLeftoverLocsList = sorted(leftoverLocsList)
-                    needed = min((len(leftoversList),MIN_SHORTPEERS))
+                    needed = min((len(leftoversList),MIN_SHORTPEERS-len(newShortPeersList)))
                     newShortPeerLocsList = sortedLeftoverLocsList[:needed]
                     newShortPeersList += [locDict[x] for x in newShortPeerLocsList]
                     if needed < len(leftoversList):
