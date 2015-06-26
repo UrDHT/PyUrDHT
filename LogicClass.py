@@ -292,7 +292,7 @@ class DHTJanitor(threading.Thread):
 
 
                 peerCandidateSet = set()
-                for p in newShortPeersList:
+                def notifyAndGet(p):
                     try:
                         self.parent.network.notify(p,self.parent.info)
                         peerCandidateSet.update(set(self.parent.network.getPeers(p)))
@@ -305,7 +305,8 @@ class DHTJanitor(threading.Thread):
                         #with self.parent.notifiedLock:
                         #    self.parent.notifiedMe = []
                         continue
-                    #TODO make parallel
+                threads = Threadpool(10)
+                threads.map(notifyAndGet,set(newShortPeersList))
 
 
                 with self.parent.peersLock:
