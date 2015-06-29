@@ -36,3 +36,6 @@ class DataBase(object):
             return [x for x in filter(lambda x: x[0]>t,self.streams[id])]
         except:
             return []
+
+    def getRecords(self):
+        return self.records.keys()

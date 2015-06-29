@@ -32,7 +32,7 @@ if __name__=="__main__":
 	if args.config:
 		configpath = args.config
 	config = jsonLoad(configpath)
-	
+
 
 	ip = config["bindAddr"]
 	port = config["bindPort"]
@@ -48,7 +48,7 @@ if __name__=="__main__":
 
 
 	bootstraps = jsonLoad(config["bootstraps"])
-	
+
 	peerPool = [util.PeerInfo(x["id"],x["addr"],x["wsAddr"]) for x in bootstraps]
 
 	peerPool = list(filter(lambda x: net.ping(x), peerPool))#filter only living bootstrap peers
@@ -62,16 +62,16 @@ if __name__=="__main__":
 
 	hashid = genHash(path,0x12)
 
-	
+
 	myPeerInfo = util.PeerInfo(hashid,path, wsPath)
 
-	
+
 	logic = LogicClass.DHTLogic(myPeerInfo)
 
 	net.setup(logic,data)
 
-	logic.setup(net)
-	
+	logic.setup(net,data)
+
 
 	logic.join(peerPool)
 
