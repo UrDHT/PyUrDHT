@@ -37,6 +37,5 @@ class DataBase(object):
         except:
             return []
 
-    def recordList(self):
+    def getRecords(self):
         return self.records.keys()
-    

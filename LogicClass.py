@@ -210,7 +210,7 @@ class DHTLogic(object):
 
     def onResponsibilityChange(self):
         #print("BACKUP IS HAPPENING")
-        records = list(self.database.recordList())
+        records = list(self.database.getRecords())
         ##print(records)
         rlocs = list(map(lambda x: space.idToPoint(2, x), records))
         ##print(rlocs)
