@@ -28,7 +28,7 @@ class Networking(object):
 		This function remotely calls seek on the remote node,
 		asking it to run LogicComponent.seek() on id
 		"""
-		path = remote.addr+"api/v0/peer/"+"seek/%s" % id 
+		path = remote.addr+"api/v0/peer/"+"seek/%s" % id
 		val = None
 		try:
 			r = requests.get(path)
@@ -58,10 +58,16 @@ class Networking(object):
 		#print("SENDING NOTIFY",remote,origin)
 		try:
 			r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
-			print("The Post Worked")
 			return r.status_code == requests.codes.ok
 		except:
-			print("The Post failed")
+			return False
+
+	def store(self,remote,id,data):
+		#print("SENDING NOTIFY",remote,origin)
+		try:
+			r = requests.post(remote.addr+"api/v0/client/store/"+id, data=data)
+			return r.status_code == requests.codes.ok
+		except:
 			return False
 
 
@@ -76,11 +82,9 @@ class Networking(object):
 
 	def ping(self,remote):
 		#print("SENDING NOTIFY",remote,origin)
-		print("ping")
 		try:
-			print("trying",remote.addr+"api/v0/peer/ping")
 			r = requests.get(remote.addr+"api/v0/peer/ping")
-			print(r.text)
+
 			return r.status_code == requests.codes.ok
 		except:
 			return False

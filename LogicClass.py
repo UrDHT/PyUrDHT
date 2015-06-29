@@ -89,6 +89,7 @@ class DHTLogic(object):
     def __init__(self, peerInfo):
         """Initializes the node with a PeerInfo object"""
         self.network = None
+        self.database = None
         self.shortPeers = []
         self.longPeers = []
         self.seekCandidates = []
@@ -100,12 +101,13 @@ class DHTLogic(object):
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
 
-    def setup(self, network):
+    def setup(self, network, database):
         """
         network: Network object, the means by which the node can communicate.
         After setting network, we can create the Maintenance thread, but not start it
         """
         self.network = network
+        self.database = database
         self.janitorThread= DHTJanitor(self)
         return True
 
@@ -146,7 +148,7 @@ class DHTLogic(object):
             with self.peersLock:
                 self.shortPeers = list(found_peers)
             print("joined with:",list(found_peers))
-            #print("done join, staring worker")
+            ##print("done join, staring worker")
         self.janitorThread.start()
         return True
 
@@ -201,10 +203,43 @@ class DHTLogic(object):
         The purpose of this depends on the DHT.
         Example in Chord: I exist and I think you're my successor.
         """
-        #print("GOT NOTIFIED",origin)
+        ##print("GOT NOTIFIED",origin)
         with self.notifiedLock:
             self.notifiedMe.append(origin)
         return True
+
+    def onResponsibilityChange(self):
+        #print("BACKUP IS HAPPENING")
+        records = list(self.database.recordList())
+        ##print(records)
+        rlocs = list(map(lambda x: space.idToPoint(2, x), records))
+        ##print(rlocs)
+        lMap = {}
+        for l,p in zip(rlocs,records):
+            lMap[l]=p
+        canidates = None
+        with self.peersLock:
+            candidates = self.seekCandidates[:]
+        if candidates is None:
+            return
+        candidates.remove(self.loc)
+        #print("canidates",candidates)
+        if len(candidates) == 0:
+            return #im alone, no backups to send
+        for loc in rlocs:
+            l = lMap[loc]
+            bestLoc = space.getClosest(loc, candidates)
+            peer = self.locPeerDict[bestLoc]
+            value = self.database.get(l)
+            #print(loc,l,peer)
+            try:
+                self.network.store(peer,l,value)#this backs up existing values, and stores old values on new nodes.
+                #print("%s is backed up to %s"%(l,peer))
+            except Exception as e:
+                print(e)
+                continue
+
+
 
 
 class DHTJanitor(threading.Thread):
@@ -236,20 +271,20 @@ class DHTJanitor(threading.Thread):
         with self.runningLock:
             peerCandidateSet = set()
             while self.running:
-                print("short",self.parent.shortPeers)
-                #print("myinfo",self.parent.info)
-                #print("Worker Tick Start")
+                #print("short",self.parent.shortPeers)
+                ##print("myinfo",self.parent.info)
+                ##print("Worker Tick Start")
                 #"Notify all my short peers"
                 with self.parent.peersLock:
-                    #print("got peer lock")
+                    ##print("got peer lock")
                     peerCandidateSet.update( set(self.parent.shortPeers[:]+self.parent.longPeers[:]))
 
 
-                print(peerCandidateSet)
+                #print(peerCandidateSet)
 
                 peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet)) #everyone who is not me
                 assert(self.parent.info not in peerCandidateSet) #everyone who is not me
-                #print("thinking")
+                ##print("thinking")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:  #functionize into handleNotifies
                     peerCandidateSet.update(set(self.parent.notifiedMe))
@@ -260,7 +295,7 @@ class DHTJanitor(threading.Thread):
                 def pingCheck(p):
                     if not self.parent.network.ping(p) == True:
                         peerCandidateSet.remove(p)
-                        print("Ping Failed",p)
+                        #print("Ping Failed",p)
                 threads = Threadpool(10)
                 for x in threads.map(pingCheck,set(peerCandidateSet)):
                     pass
@@ -268,7 +303,7 @@ class DHTJanitor(threading.Thread):
                 points = []
                 locDict = {}
 
-                #print(peers_2_keep)
+                ##print(peers_2_keep)
                 for p in set(peerCandidateSet):
                     l = space.idToPoint(2,p.id)
                     points.append(l)
@@ -301,7 +336,7 @@ class DHTJanitor(threading.Thread):
                         newpeers = self.parent.network.getPeers(p)
                         peerCandidateSet.update(set(newpeers))
                     except DialFailed:
-                        print("DIAL FAILED",p)
+                        #print("DIAL FAILED",p)
                         with self.parent.peersLock:
                             if p in self.parent.shortPeers:
                                 self.parent.shortPeers.remove(p)
@@ -311,17 +346,22 @@ class DHTJanitor(threading.Thread):
                         #    self.parent.notifiedMe = []
 
                 threads = Threadpool(10)
-                print("about to map")
+                #print("about to map")
                 for x in threads.map(notifyAndGet,set(newShortPeersList)):
                     pass
-                print("done mapping")
+                #print("done mapping")
 
-
+                trigger_change = False
                 with self.parent.peersLock:
+                    if self.parent.shortPeers != newShortPeersList:
+                        trigger_change = True #consider reducing this to a copy, and compare outside the lock
                     self.parent.shortPeers = newShortPeersList
+
                     self.parent.longPeers = leftoversList
                     self.parent.seekCandidates = points + [self.parent.loc]
                     self.parent.locPeerDict = locDict
                 with self.parent.notifiedLock:
                     self.parent.notifiedMe = []
+                if trigger_change or random.random()<0.0:
+                    self.parent.onResponsibilityChange()
                 time.sleep(MAINTENANCE_SLEEP_PERIOD)
