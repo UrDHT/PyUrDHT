@@ -105,6 +105,8 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             wsAddr = jsonDict["wsAddr"]
             myLogic.getNotified(PeerInfo(hashID,addr,wsAddr))
             self.wfile.write(b"[]")
+    def log_message(self, format, *args):
+        return
 
 def getThread(ip='0.0.0.0',port=8000):
     server = http.server.HTTPServer((ip,port), RESTHandler)
