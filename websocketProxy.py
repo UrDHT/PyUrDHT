@@ -17,7 +17,7 @@ def main(wsBindAddr,wsBindPort,hostPath):
 	import asyncio
 	import websockets
 	import json
-	import myrequests
+	import myrequests as requests
 
 	@asyncio.coroutine
 	def proxy(websocket, path):
