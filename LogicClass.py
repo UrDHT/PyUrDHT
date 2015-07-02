@@ -76,7 +76,8 @@ import threading
 import queue
 import time
 import random
-from errors import *
+import logging
+import errors as error
 
 from threadpool import Threadpool
 
@@ -84,6 +85,8 @@ from threadpool import Threadpool
 MAX_LONGPEERS = 200
 MIN_SHORTPEERS = 10
 MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
+
+logger = logging.getLogger(__name__)
 
 class DHTLogic(object):
     def __init__(self, peerInfo):
@@ -121,7 +124,7 @@ class DHTLogic(object):
         We use a random peer from peers to seek for the node currently resonsible for my id
         """
         if peers:
-            print("Joining Network")
+            logger.info("Joining Network")
             found_peers = set(peers)
             # Assuming we use a bootstrap list,
             # we shouldn't always select the first.
@@ -137,7 +140,7 @@ class DHTLogic(object):
                     found_peers.add(new_best)
                     best_parent = new_best
                 inital_peers = self.network.getPeers(best_parent)
-            except DialFailed:
+            except error.DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
 
@@ -147,8 +150,8 @@ class DHTLogic(object):
                     found_peers.add(p)
             with self.peersLock:
                 self.shortPeers = list(found_peers)
-            print("joined with:",list(found_peers))
-            ##print("done join, staring worker")
+            logger.debug("Joined with:" + str(list(found_peers)))
+            logger.debug("Done with join, starting worker")
         self.janitorThread.start()
         return True
 
@@ -203,17 +206,17 @@ class DHTLogic(object):
         The purpose of this depends on the DHT.
         Example in Chord: I exist and I think you're my successor.
         """
-        ##print("GOT NOTIFIED",origin)
+        logger.debug("GOT NOTIFIED" + origin)
         with self.notifiedLock:
             self.notifiedMe.append(origin)
         return True
 
     def onResponsibilityChange(self):
-        #print("BACKUP IS HAPPENING")
+        logger.debug("BACKUP IS HAPPENING")
         records = list(self.database.getRecords())
-        ##print(records)
+        logger.debug(str(records))
         rlocs = list(map(lambda x: space.idToPoint(2, x), records))
-        ##print(rlocs)
+        logger.debug(str(rlocs))
         lMap = {}
         for l,p in zip(rlocs,records):
             lMap[l]=p
@@ -223,7 +226,7 @@ class DHTLogic(object):
         if candidates is None:
             return
         candidates.remove(self.loc)
-        #print("canidates",candidates)
+        logger.info("Candidates: " + str(candidates))
         if len(candidates) == 0:
             return #im alone, no backups to send
         for loc in rlocs:
@@ -231,12 +234,12 @@ class DHTLogic(object):
             bestLoc = space.getClosest(loc, candidates)
             peer = self.locPeerDict[bestLoc]
             value = self.database.get(l)
-            #print(loc,l,peer)
+            logger.debug(loc + " " + l + " " + peer)
             try:
                 self.network.store(peer,l,value)#this backs up existing values, and stores old values on new nodes.
-                #print("%s is backed up to %s"%(l,peer))
+                logger.debug("%s is backed up to %s"%(l,peer))
             except Exception as e:
-                print(e)
+                logger.debug("Exception: " + e)
                 continue
 
 
@@ -271,20 +274,20 @@ class DHTJanitor(threading.Thread):
         with self.runningLock:
             peerCandidateSet = set()
             while self.running:
-                #print("short",self.parent.shortPeers)
-                ##print("myinfo",self.parent.info)
-                ##print("Worker Tick Start")
+                logger.debug("Short: " + str(self.parent.shortPeers))
+                logger.debug("MyInfo: " + str(self.parent.info))
+                logger.debug("Worker Tick Start")
                 #"Notify all my short peers"
                 with self.parent.peersLock:
-                    ##print("got peer lock")
+                    logger.debug("Got peer lock")
                     peerCandidateSet.update( set(self.parent.shortPeers[:]+self.parent.longPeers[:]))
 
 
-                #print(peerCandidateSet)
+                logger.debug(str(peerCandidateSet))
 
                 peerCandidateSet = set(filter(self.parent.info.__ne__, peerCandidateSet)) #everyone who is not me
                 assert(self.parent.info not in peerCandidateSet) #everyone who is not me
-                ##print("thinking")
+                logger.info("Thinking...")
                 #"Re-evaluate my peerlist"
                 with self.parent.notifiedLock:  #functionize into handleNotifies
                     peerCandidateSet.update(set(self.parent.notifiedMe))
@@ -295,7 +298,7 @@ class DHTJanitor(threading.Thread):
                 def pingCheck(p):
                     if not self.parent.network.ping(p) == True:
                         peerCandidateSet.remove(p)
-                        #print("Ping Failed",p)
+                        logger.error("Ping Failed: " + p)
                 threads = Threadpool(10)
                 for x in threads.map(pingCheck,set(peerCandidateSet)):
                     pass
@@ -303,7 +306,7 @@ class DHTJanitor(threading.Thread):
                 points = []
                 locDict = {}
 
-                ##print(peers_2_keep)
+                logger.debug(str(peerCandidateSet))
                 for p in set(peerCandidateSet):
                     l = space.idToPoint(2,p.id)
                     points.append(l)
@@ -335,8 +338,8 @@ class DHTJanitor(threading.Thread):
                         self.parent.network.notify(p,self.parent.info)
                         newpeers = self.parent.network.getPeers(p)
                         peerCandidateSet.update(set(newpeers))
-                    except DialFailed:
-                        #print("DIAL FAILED",p)
+                    except error.DialFailed:
+                        logger.error("DIAL FAILED" + p)
                         with self.parent.peersLock:
                             if p in self.parent.shortPeers:
                                 self.parent.shortPeers.remove(p)
@@ -346,10 +349,10 @@ class DHTJanitor(threading.Thread):
                         #    self.parent.notifiedMe = []
 
                 threads = Threadpool(10)
-                #print("about to map")
+                logger.debug("About to map")
                 for x in threads.map(notifyAndGet,set(newShortPeersList)):
                     pass
-                #print("done mapping")
+                logger.debug("Done mapping")
 
                 trigger_change = False
                 with self.parent.peersLock:

@@ -12,6 +12,9 @@ from util import PeerInfo
 import http.server
 import json
 import re, cgi
+import logging
+
+logger = logging.getLogger(__name__)
 
 api_version = "api/v0"
 
@@ -93,12 +96,12 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             myDB.post(recordID,str(data,"UTF-8"))
 
         elif None != re.search('/api/v0/peer/notify*', self.path):
-            #print(self.path)
+            logger.debug(str(self.path))
 
             contentLen = int(self.headers.get_all('content-length')[0])
             data = self.rfile.read(contentLen)
             #data = self.rfile.read()
-            #print("NOTIFIED",data)
+            logger.debug("NOTIFIED" + str(data))
             jsonDict = json.loads(str(data,"UTF-8"))
             addr = jsonDict["addr"]
             hashID = jsonDict["id"]

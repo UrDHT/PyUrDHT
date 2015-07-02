@@ -17,12 +17,15 @@ def main(wsBindAddr,wsBindPort,hostPath):
 	import asyncio
 	import websockets
 	import json
-	import requests
+	import myrequests
+	import logging
+
+	logger = logging.getLogger(__name__)
 
 	@asyncio.coroutine
 	def proxy(websocket, path):
 	    cmd_text = yield from websocket.recv()
-	    print(cmd_text)
+	    logger.debug(str(cmd_text))
 	    cmd = json.loads(cmd_text)
 	    output = ""
 	    if cmd["method"] == "seek":

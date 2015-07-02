@@ -10,7 +10,10 @@ import server
 import myrequests as requests
 import json
 import util
-from errors import *
+import errors as error
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Networking(object):
 	def __init__(self,ip,port):
@@ -35,27 +38,25 @@ class Networking(object):
 			results = r.json()
 			val = util.PeerInfo(results["id"],results["addr"],results["wsAddr"])
 		except Exception:
-			raise DialFailed()
+			raise error.DialFailed()
 		return val
 
 	def getPeers(self,remote):
 		result = []
 		try:
 			r = requests.get(remote.addr+"api/v0/peer/getPeers/")
-			#print(r.text)
-			#print(r.text)
-			#print(r.text)
+			debug(r.text)
 			if len(r.json()) == 0:
 				return []
 			for p in r.json():
 				newPeer = util.PeerInfo(p["id"],p["addr"],p["wsAddr"])
 				result.append(newPeer)
 		except Exception:
-			raise DialFailed()
+			raise error.DialFailed()
 		return result
 
 	def notify(self,remote,origin):
-		#print("SENDING NOTIFY",remote,origin)
+		logger.debug("SENDING NOTIFY: " + str(remote) + str(origin))
 		try:
 			r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
 			return r.status_code == requests.codes.ok
@@ -63,7 +64,7 @@ class Networking(object):
 			return False
 
 	def store(self,remote,id,data):
-		#print("SENDING NOTIFY",remote,origin)
+		logger.debug("STORE DATA ON PEER: " + str(remote))
 		try:
 			r = requests.post(remote.addr+"api/v0/client/store/"+id, data=data)
 			return r.status_code == requests.codes.ok
@@ -77,11 +78,11 @@ class Networking(object):
 			r = requests.get(remote.addr+"api/v0/peer/getmyIP")
 			ip = r.text
 		except:
-			raise DialFailed()
+			raise error.DialFailed()
 		return ip
 
 	def ping(self,remote):
-		#print("SENDING NOTIFY",remote,origin)
+		logger.debug("SENDING PING: " + str(remote))
 		try:
 			r = requests.get(remote.addr+"api/v0/peer/ping")
 
