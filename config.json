@@ -4,6 +4,6 @@
 	"wsBindAddr":"0.0.0.0",
 	"wsBindPort":8001,
 	"bootstraps":"bootstrap.json",
-	"publicAddr":"http://73.207.38.249:8000/",
-	"wsAddr":"ws:/73.207.38.249:8001"
+	"publicAddr":"",
+	"wsAddr":""
 }
