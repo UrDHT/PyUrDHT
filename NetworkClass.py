@@ -33,7 +33,7 @@ class Networking(object):
 		try:
 			r = requests.get(path)
 			results = r.json()
-			val = util.PeerInfo(results["id"],results["addr"],results["wsAddr"])
+			val = util.PeerInfo(results["id"],results["addr"],results["loc"])
 		except Exception:
 			raise DialFailed()
 		return val
@@ -48,7 +48,7 @@ class Networking(object):
 			if len(r.json()) == 0:
 				return []
 			for p in r.json():
-				newPeer = util.PeerInfo(p["id"],p["addr"],p["wsAddr"])
+				newPeer = util.PeerInfo(p["id"],p["addr"],p["loc"])
 				result.append(newPeer)
 		except Exception:
 			raise DialFailed()
@@ -81,7 +81,6 @@ class Networking(object):
 		return ip
 
 	def ping(self,remote):
-		#print("SENDING NOTIFY",remote,origin)
 		try:
 			r = requests.get(remote.addr+"api/v0/peer/ping")
 

@@ -17,68 +17,67 @@ if sys.platform == 'win32':
 import argparse
 
 def jsonLoad(fname):
-	with open(fname,"r") as fp:
-		return json.load(fp)
+    with open(fname,"r") as fp:
+        return json.load(fp)
 
 
 if __name__=="__main__":
 
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--config",default="./config.json",help="Use a specific configuration file")
-	args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config",default="./config.json",help="Use a specific configuration file")
+    args = parser.parse_args()
 
-	configpath = "./config.json"
-	if args.config:
-		configpath = args.config
-	config = jsonLoad(configpath)
-
-
-	ip = config["bindAddr"]
-	port = config["bindPort"]
-
-	wsip = config["wsBindAddr"]
-	wsport = config["wsBindPort"]
-	wsPath = config["wsAddr"]
-
-	net = NetworkClass.Networking(ip,port)
+    configpath = "./config.json"
+    if args.config:
+        configpath = args.config
+    config = jsonLoad(configpath)
 
 
-	data = DataBaseClass.DataBase()
+    ip = config["bindAddr"]
+    port = config["bindPort"]
+
+    loc = None
+    if type(config["loc"]) is type([]) and len(config["loc"]) == 2:
+        print("updating loc")
+        loc = tuple(config["loc"])
+
+    net = NetworkClass.Networking(ip,port)
 
 
-	bootstraps = jsonLoad(config["bootstraps"])
-
-	peerPool = [util.PeerInfo(x["id"],x["addr"],x["wsAddr"]) for x in bootstraps]
-
-	peerPool = list(filter(lambda x: net.ping(x), peerPool))#filter only living bootstrap peers
+    data = DataBaseClass.DataBase()
 
 
-	path = config["publicAddr"]
-	if len(path) == 0 and len(peerPool) > 0:
-		random_peer = random.choice(peerPool)
-		pubip = net.getIP(random_peer)
-		path = "http://%s:%d/" % (pubip, port)
-
-	hashid = genHash(path,0x12)
+    bootstraps = jsonLoad(config["bootstraps"])
 
 
-	myPeerInfo = util.PeerInfo(hashid,path, wsPath)
+    peerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in bootstraps]
+    print(peerPool)
+
+    peerPool = list(filter(lambda x: net.ping(x), peerPool))#filter only living bootstrap peers
 
 
-	logic = LogicClass.DHTLogic(myPeerInfo)
 
-	net.setup(logic,data)
+    path = config["publicAddr"]
+    if len(path) == 0 and len(peerPool) > 0:
+        random_peer = random.choice(peerPool)
+        pubip = net.getIP(random_peer)
+        path = "http://%s:%d/" % (pubip, port)
 
-	logic.setup(net,data)
+    hashid = genHash(path,0x12)
 
 
-	logic.join(peerPool)
+    myPeerInfo = util.PeerInfo(hashid,path, loc)
 
-	print("Node up and Running")
-	print(myPeerInfo)
 
-	p = Process(target=websocketProxy.main, args=(wsip, wsport, path+"/api/v0/client/"),daemon=True)
-	p.start()
+    logic = LogicClass.DHTLogic(myPeerInfo)
 
-	print("started websocket proxy")
+    net.setup(logic,data)
+
+    logic.setup(net,data)
+
+
+    logic.join(peerPool)
+
+    print("Node up and Running")
+    print(logic.info)
