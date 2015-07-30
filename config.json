@@ -1,9 +1,7 @@
 {
 	"bindAddr":"0.0.0.0",
 	"bindPort":8000,
-	"wsBindAddr":"0.0.0.0",
-	"wsBindPort":8001,
 	"bootstraps":"bootstrap.json",
 	"publicAddr":"",
-	"wsAddr":""
+	"loc":""
 }
