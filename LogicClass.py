@@ -96,7 +96,11 @@ class DHTLogic(object):
         self.notifiedMe = []
         self.locPeerDict = {}
         self.info = peerInfo
-        self.loc = space.idToPoint(2, self.info.id)
+        if peerInfo.loc is None:
+            self.loc = space.idToPoint(2, self.info.id)
+            self.info.loc = self.loc
+        else:
+            self.loc = peerInfo.loc
         self.janitorThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()

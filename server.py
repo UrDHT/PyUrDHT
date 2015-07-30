@@ -76,6 +76,9 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         if None != re.search('/api/v0/peer/ping*', self.path):
             self.wfile.write(b'\"PONG\"')
 
+        if None != re.search('/api/v0/peer/info*', self.path):
+            self.wfile.write(bytes(str(myLogic.info),"UTF-8"))
+
 
     def do_POST(self):
         self.do_HEAD()
@@ -102,8 +105,8 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             jsonDict = json.loads(str(data,"UTF-8"))
             addr = jsonDict["addr"]
             hashID = jsonDict["id"]
-            wsAddr = jsonDict["wsAddr"]
-            myLogic.getNotified(PeerInfo(hashID,addr,wsAddr))
+            loc = jsonDict["loc"]
+            myLogic.getNotified(PeerInfo(hashID,addr,loc))
             self.wfile.write(b"[]")
     def log_message(self, format, *args):
         return
