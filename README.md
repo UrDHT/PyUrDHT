@@ -22,14 +22,13 @@ config.json looks like this:
 
 ```
 {
-	"bindAddr":"0.0.0.0", //set this to the interface you want the server to bind to
-	"bindPort":8000, //set this to the port you want the rest-server to run on
-	"wsBindAddr":"0.0.0.0", //this will match bindAddr in most cases
-	"wsBindPort":8001, //this is the port you want the websocket-server to run on
-	"bootstraps":"bootstrap.json", //this is a list of servers to bootstrap from
-	"publicAddr":"http://127.0.0.1:8000/", //this should match the publicly accessible IP for your computer and bindPort
-	"wsAddr":"ws://127.0.0.1:8001" // similar to above, matching wsBindPort
+	"bindAddr":"0.0.0.0",
+	"bindPort":8000,
+	"bootstraps":"bootstrap.json",
+	"publicAddr":"",
+	"loc":""
 }
+
 ```
 
 the "bindAddr" and "bindPort" indicate the network interface and port you want to bind to.
