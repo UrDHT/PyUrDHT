@@ -63,6 +63,12 @@ if __name__=="__main__":
         random_peer = random.choice(peerPool)
         pubip = net.getIP(random_peer)
         path = "http://%s:%d/" % (pubip, port)
+    else:
+        if path[-1] != "/":
+            path += "/"
+        if path[0:4] != "http":
+            path = "http://"+ path
+
 
     hashid = genHash(path,0x12)
 
