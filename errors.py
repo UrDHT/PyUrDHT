@@ -1,2 +1,2 @@
 class DialFailed(Exception):
-	pass
+    pass
