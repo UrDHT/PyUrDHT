@@ -13,11 +13,25 @@
 
 
 """
-def main(wsBindAddr,wsBindPort,hostPath):
+
+parentInfo = None
+
+def setup(pInfo):
+    global parentInfo 
+    parentInfo = pInfo
+    from multiprocessing import Process
+    p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/"])
+    p.start();
+    return None # returns a logic class or None""
+
+
+
+
+def threadTarget(wsBindAddr,wsBindPort,hostPath):
     import asyncio
-    import websockets
+    from . import websockets
     import json
-    import requests
+    from . import myrequests as requests
 
     @asyncio.coroutine
     def proxy(websocket, path):

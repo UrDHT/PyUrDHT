@@ -1,7 +1,10 @@
 {
-	"bindAddr":"0.0.0.0",
+	"bindAddr":"127.0.0.1",
 	"bindPort":8000,
 	"bootstraps":"bootstrap.json",
 	"publicAddr":"",
-	"loc":""
+	"loc":"",
+	"services":{
+		"websocket":"websocketProxy"
+	}
 }

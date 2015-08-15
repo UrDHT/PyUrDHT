@@ -7,7 +7,6 @@ from pymultihash import genHash
 import json
 import random, time
 import sys
-import websocketProxy
 from multiprocessing import Process
 if sys.platform == 'win32':
     import multiprocessing.reduction    # make sockets pickable/inheritable
@@ -15,6 +14,7 @@ if sys.platform == 'win32':
 
 
 import argparse
+from importlib.machinery import SourceFileLoader
 
 def jsonLoad(fname):
     with open(fname,"r") as fp:
@@ -87,3 +87,22 @@ if __name__=="__main__":
 
     print("Node up and Running")
     print(logic.info)
+
+    service_ids = config["services"]
+    services = {}
+    for k in service_ids.keys():
+        myLogicClass = None
+        command = """
+import %s as foo
+myLogicClass = foo.setup(myPeerInfo)
+""" % ("services."+service_ids[k])
+        exec(command)
+        if(myLogicClass is None):
+            myLogicClass = LogicClass.DHTLogic
+        services[k] = myLogicClass(myPeerInfo,k)
+        net.addHandler(k,services[k])
+        services[k].setup(net,data)
+        services[k].join(peerPool)
+
+
+
