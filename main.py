@@ -54,14 +54,14 @@ if __name__=="__main__":
     peerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in bootstraps]
     print(peerPool)
 
-    peerPool = list(filter(lambda x: net.ping(x), peerPool))#filter only living bootstrap peers
+    peerPool = list(filter(lambda x: net.ping("UrDHT",x), peerPool))#filter only living bootstrap peers
 
 
 
     path = config["publicAddr"]
     if len(path) == 0 and len(peerPool) > 0:
         random_peer = random.choice(peerPool)
-        pubip = net.getIP(random_peer)
+        pubip = net.getIP("UrDHT",random_peer)
         path = "http://%s:%d/" % (pubip, port)
     else:
         if path[-1] != "/":
@@ -76,7 +76,7 @@ if __name__=="__main__":
     myPeerInfo = util.PeerInfo(hashid,path, loc)
 
 
-    logic = LogicClass.DHTLogic(myPeerInfo)
+    logic = LogicClass.DHTLogic(myPeerInfo,"UrDHT")
 
     net.setup(logic,data)
 

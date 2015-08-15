@@ -13,18 +13,25 @@ import http.server
 import json
 import re, cgi
 
-api_version = "api/v0"
 
-myLogic = None
+myHandlers = None
 myDB = None
 
-def setLinks(logic,db):
-    global myLogic
+def setLinks(handlers,db):
+    global myHandlers
     global myDB
-    myLogic = logic
+    myHandlers = handlers
     myDB = db
 
 class RESTHandler(http.server.BaseHTTPRequestHandler):
+    def success(self):
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+    def failure(self):
+        self.send_response(400)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
     def do_HEAD(self):
         """Reply with OK and send headers"""
         self.send_response(200)
@@ -35,49 +42,62 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         """
         Holy boilerplate, Batman!
         """
-
-        self.do_HEAD()
-        #self.wfile.write(b"HTTP/1.1 200 OK\n")
-        if None != re.search('/api/v0/client/seek/*', self.path):
-            recordID = self.path.split('/')[-1]
-            result = myLogic.seek(recordID)
-            answer = bytes(str(result),"UTF-8")
-            self.wfile.write(answer)
-        if None != re.search('/api/v0/peer/seek/*', self.path):
-            recordID = self.path.split('/')[-1]
-            result = myLogic.seek(recordID)
-            answer = bytes(str(result),"UTF-8")
-            self.wfile.write(answer)
-        if None != re.search('/api/v0/client/get/*', self.path):
-            recordID = self.path.split('/')[-1]
-            result = myDB.get(recordID)
-            if result:
-                answer = bytes(result)
+        k = self.path.split('/')[1]
+        print(k)
+        if k in myHandlers.keys():
+            myLogic = myHandlers[k]
+            
+            #self.wfile.write(b"HTTP/1.1 200 OK\n")
+            if None != re.search(k+'/client/seek/*', self.path):
+                self.success()
+                recordID = self.path.split('/')[-1]
+                result = myLogic.seek(recordID)
+                answer = bytes(str(result),"UTF-8")
                 self.wfile.write(answer)
-
-        if None != re.search('/api/v0/client/poll/*/*', self.path):
-            recordID = self.path.split('/')[-2]
-            t = float(self.path.split('/')[-1])
-            result = json.dumps(myDB.poll(recordID,t))
-            if result:
-                answer = bytes(result,"UTF-8")
+            elif None != re.search(k+'/peer/seek/*', self.path):
+                self.success()
+                recordID = self.path.split('/')[-1]
+                result = myLogic.seek(recordID)
+                answer = bytes(str(result),"UTF-8")
                 self.wfile.write(answer)
+            elif None != re.search(k+'/client/get/*', self.path):
+                self.success()
+                recordID = self.path.split('/')[-1]
+                result = myDB.get(recordID)
+                if result:
+                    answer = bytes(result)
+                    self.wfile.write(answer)
 
-        if None != re.search('/api/v0/peer/getPeers*', self.path):
-            recordID = self.path.split('/')[-1]
-            result_list = myLogic.getPeers()
-            result = map(str,result_list)
-            answer = "[%s]"%",".join(result)
-            self.wfile.write(bytes(answer,"UTF-8"))
+            elif None != re.search(k+'/client/poll/*/*', self.path):
+                self.success()
+                recordID = self.path.split('/')[-2]
+                t = float(self.path.split('/')[-1])
+                result = json.dumps(myDB.poll(recordID,t))
+                if result:
+                    answer = bytes(result,"UTF-8")
+                    self.wfile.write(answer)
 
-        if None != re.search('/api/v0/peer/getmyIP*', self.path):
-            self.wfile.write(bytes(self.client_address[0],"UTF-8"))
+            elif None != re.search(k+'/peer/getPeers*', self.path):
+                self.success()
+                recordID = self.path.split('/')[-1]
+                result_list = myLogic.getPeers()
+                result = map(str,result_list)
+                answer = "[%s]"%",".join(result)
+                self.wfile.write(bytes(answer,"UTF-8"))
 
-        if None != re.search('/api/v0/peer/ping*', self.path):
-            self.wfile.write(b'\"PONG\"')
+            elif None != re.search(k+'/peer/getmyIP*', self.path):
+                self.success()
+                self.wfile.write(bytes(self.client_address[0],"UTF-8"))
 
-        if None != re.search('/api/v0/peer/info*', self.path):
-            self.wfile.write(bytes(str(myLogic.info),"UTF-8"))
+            elif None != re.search(k+'/peer/ping*', self.path):
+                self.success()
+                self.wfile.write(b'\"PONG\"')
+
+            elif None != re.search(k+'/peer/info*', self.path):
+                self.success()
+                self.wfile.write(bytes(str(myLogic.info),"UTF-8"))
+            else:
+                self.failure()
 
 
     def do_POST(self):

@@ -86,10 +86,11 @@ MIN_SHORTPEERS = 10
 MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
 
 class DHTLogic(object):
-    def __init__(self, peerInfo):
+    def __init__(self, peerInfo, key):
         """Initializes the node with a PeerInfo object"""
         self.network = None
         self.database = None
+        self.key = key
         self.shortPeers = []
         self.longPeers = []
         self.seekCandidates = []
@@ -137,10 +138,10 @@ class DHTLogic(object):
             inital_peers = None
             try:
                 while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
-                    new_best = self.network.seek(best_parent,self.info.id)
+                    new_best = self.network.seek(self.key,best_parent,self.info.id)
                     found_peers.add(new_best)
                     best_parent = new_best
-                inital_peers = self.network.getPeers(best_parent)
+                inital_peers = self.network.getPeers(self.key,best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
@@ -237,7 +238,7 @@ class DHTLogic(object):
             value = self.database.get(l)
             #print(loc,l,peer)
             try:
-                self.network.store(peer,l,value)#this backs up existing values, and stores old values on new nodes.
+                self.network.store(self.key,peer,l,value)#this backs up existing values, and stores old values on new nodes.
                 #print("%s is backed up to %s"%(l,peer))
             except Exception as e:
                 print(e)
