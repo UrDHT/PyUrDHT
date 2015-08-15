@@ -14,15 +14,17 @@ from errors import *
 
 class Networking(object):
     def __init__(self,ip,port):
-        self.serverThread = server.getThread(ip,port)
-        self.serverThread.start()
+        self.ip = ip
+        self.port = port
         self.handlers = {}
 
     def setup(self,logic,data):
         """
         Lets the server know which LogicClass and DataClass to use
         """
-        
+
+        self.serverThread = server.getThread(self.ip,self.port)
+        self.serverThread.start()
         self.handlers["UrDHT"] = logic
         server.setLinks(self.handlers,data)
 
@@ -47,7 +49,7 @@ class Networking(object):
     def getPeers(self,service,remote):
         result = []
         try:
-            r = requests.get(remote.addr+service+"peer/getPeers/")
+            r = requests.get(remote.addr+service+"/peer/getPeers/")
             #print(r.text)
             #print(r.text)
             #print(r.text)
@@ -63,7 +65,7 @@ class Networking(object):
     def notify(self,service,remote,origin):
         #print("SENDING NOTIFY",remote,origin)
         try:
-            r = requests.post(remote.addr+service+"peer/notify", data=str(origin))
+            r = requests.post(remote.addr+service+"/peer/notify", data=str(origin))
             return r.status_code == requests.codes.ok
         except:
             return False
@@ -71,7 +73,7 @@ class Networking(object):
     def store(self,service,remote,id,data):
         #print("SENDING NOTIFY",remote,origin)
         try:
-            r = requests.post(remote.addr+service+"client/store/"+id, data=data)
+            r = requests.post(remote.addr+service+"/client/store/"+id, data=data)
             return r.status_code == requests.codes.ok
         except:
             return False
@@ -80,7 +82,7 @@ class Networking(object):
     def getIP(self,service,remote):
         ip = None
         try:
-            r = requests.get(remote.addr+service+"peer/getmyIP")
+            r = requests.get(remote.addr+service+"/peer/getmyIP")
             ip = r.text
         except:
             raise DialFailed()
@@ -88,7 +90,7 @@ class Networking(object):
 
     def ping(self,service,remote):
         try:
-            r = requests.get(remote.addr+service+"peer/ping")
+            r = requests.get(remote.addr+service+"/peer/ping")
 
             return r.status_code == requests.codes.ok
         except:

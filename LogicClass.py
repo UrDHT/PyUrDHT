@@ -298,7 +298,7 @@ class DHTJanitor(threading.Thread):
 
 
                 def pingCheck(p):
-                    if not self.parent.network.ping(p) == True:
+                    if not self.parent.network.ping(self.parent.key,p) == True:
                         peerCandidateSet.remove(p)
                         #print("Ping Failed",p)
                 threads = Threadpool(10)
@@ -337,8 +337,8 @@ class DHTJanitor(threading.Thread):
                 peerCandidateSet = set()
                 def notifyAndGet(p):
                     try:
-                        self.parent.network.notify(p,self.parent.info)
-                        newpeers = self.parent.network.getPeers(p)
+                        self.parent.network.notify(self.parent.key,p,self.parent.info)
+                        newpeers = self.parent.network.getPeers(self.parent.key,p)
                         peerCandidateSet.update(set(newpeers))
                     except DialFailed:
                         #print("DIAL FAILED",p)

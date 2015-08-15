@@ -22,6 +22,7 @@ def setLinks(handlers,db):
     global myDB
     myHandlers = handlers
     myDB = db
+    print("LINKS ARE SET")
 
 class RESTHandler(http.server.BaseHTTPRequestHandler):
     def success(self):
@@ -43,7 +44,6 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         Holy boilerplate, Batman!
         """
         k = self.path.split('/')[1]
-        print(k)
         if k in myHandlers.keys():
             myLogic = myHandlers[k]
             
@@ -101,33 +101,37 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        self.do_HEAD()
-        #self.wfile.write(b"HTTP/1.1 200 OK\n")
-        if None != re.search('/api/v0/client/store/*', self.path):
-            contentLen = int(self.headers.get_all('content-length')[0])
-            data = self.rfile.read(contentLen)
-            recordID = self.path.split('/')[-1]
-            myDB.store(recordID,data)
+        k = self.path.split('/')[1]
+        if k in myHandlers.keys():
+            myLogic = myHandlers[k]
+            #self.wfile.write(b"HTTP/1.1 200 OK\n")
+            if None != re.search(k+'/client/store/*', self.path):
+                contentLen = int(self.headers.get_all('content-length')[0])
+                data = self.rfile.read(contentLen)
+                recordID = self.path.split('/')[-1]
+                myDB.store(recordID,data)
 
-        if None != re.search('/api/v0/client/post/*', self.path):
-            contentLen = int(self.headers.get_all('content-length')[0])
-            data = self.rfile.read(contentLen)
-            recordID = self.path.split('/')[-1]
-            myDB.post(recordID,str(data,"UTF-8"))
+            elif None != re.search(k+'/client/post/*', self.path):
+                contentLen = int(self.headers.get_all('content-length')[0])
+                data = self.rfile.read(contentLen)
+                recordID = self.path.split('/')[-1]
+                myDB.post(recordID,str(data,"UTF-8"))
 
-        elif None != re.search('/api/v0/peer/notify*', self.path):
-            #print(self.path)
+            elif None != re.search(k+'/peer/notify*', self.path):
+                #print(self.path)
 
-            contentLen = int(self.headers.get_all('content-length')[0])
-            data = self.rfile.read(contentLen)
-            #data = self.rfile.read()
-            #print("NOTIFIED",data)
-            jsonDict = json.loads(str(data,"UTF-8"))
-            addr = jsonDict["addr"]
-            hashID = jsonDict["id"]
-            loc = jsonDict["loc"]
-            myLogic.getNotified(PeerInfo(hashID,addr,loc))
-            self.wfile.write(b"[]")
+                contentLen = int(self.headers.get_all('content-length')[0])
+                data = self.rfile.read(contentLen)
+                #data = self.rfile.read()
+                #print("NOTIFIED",data)
+                jsonDict = json.loads(str(data,"UTF-8"))
+                addr = jsonDict["addr"]
+                hashID = jsonDict["id"]
+                loc = jsonDict["loc"]
+                myLogic.getNotified(PeerInfo(hashID,addr,loc))
+                self.wfile.write(b"[]")
+            else:
+                self.failure()
     def log_message(self, format, *args):
         return
 
