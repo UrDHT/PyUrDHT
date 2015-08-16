@@ -27,7 +27,7 @@ def setup(pInfo):
     wsAddr = "ws://%s:8023"%addr
     #turned back on #turned off for testing. have more than 1 borks things
     from multiprocessing import Process
-    p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/"])
+    p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/client/"])
     p.start();
 
     return {'LogicClass':None,'NetHandler':MyHandler} # returns a logic class or None""
@@ -46,6 +46,12 @@ def threadTarget(wsBindAddr,wsBindPort,hostPath):
     import json
     from . import myrequests as requests
 
+    def wsResolve(path):
+        newpath = ''.join((path,"websocket/client/wsinfo"))
+        print(newpath)
+        r = requests.get(newpath)
+        return r.text
+
     @asyncio.coroutine
     def proxy(websocket, path):
         cmd_text = yield from websocket.recv()
@@ -56,7 +62,12 @@ def threadTarget(wsBindAddr,wsBindPort,hostPath):
             seekarg = cmd["id"]
             newpath = ''.join((hostPath,"seek/",seekarg))
             r = requests.get(newpath)
-            output = r.text
+            peer = r.json()
+            peerAddr = peer["addr"]
+            wsaddr = wsResolve(peerAddr)
+            peer["wsAddr"] = wsaddr
+            print(json.dumps(peer))
+            output = json.dumps(peer)
         if cmd["method"] == "get":
             seekarg = cmd["id"]
             newpath = ''.join((hostPath,"get/",seekarg))
