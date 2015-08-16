@@ -16,6 +16,8 @@ if sys.platform == 'win32':
 import argparse
 from importlib.machinery import SourceFileLoader
 
+import UrClientPython3 as client
+
 def jsonLoad(fname):
     with open(fname,"r") as fp:
         return json.load(fp)
@@ -82,6 +84,7 @@ if __name__=="__main__":
 
     logic.setup(net,data)
 
+    myClient = client.UrDHTClient("UrDHT",[json.loads(str(myPeerInfo))])
 
     logic.join(peerPool)
 
@@ -90,6 +93,7 @@ if __name__=="__main__":
 
     service_ids = config["services"]
     services = {}
+    time.sleep(5)
     for k in service_ids.keys():
         myLogicClass = None
         command = """
@@ -99,10 +103,21 @@ myLogicClass = foo.setup(myPeerInfo)
         exec(command)
         if(myLogicClass is None):
             myLogicClass = LogicClass.DHTLogic
+
         services[k] = myLogicClass(myPeerInfo,k)
         net.addHandler(k,services[k])
         services[k].setup(net,data)
-        services[k].join(peerPool)
-
-
-
+        subnetPeerPool = []
+        try:
+            c = client.bootstrapSubnet(k,myClient.knownPeers)
+            subnetPeerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in c.knownPeers]
+        except:
+            print("Peer discovery for %s failed. May be only peer in subnet" % k)
+        services[k].join(subnetPeerPool)
+        #print(subnetPeerPool)
+        old_list = myClient.get(k)
+        new_list = []
+        if(old_list):
+            new_list = json.loads(old_list)
+        new_list.append(json.loads(str(myPeerInfo)))
+        myClient.store(k,json.dumps(new_list))

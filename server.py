@@ -46,7 +46,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         k = self.path.split('/')[1]
         if k in myHandlers.keys():
             myLogic = myHandlers[k]
-            
+
             #self.wfile.write(b"HTTP/1.1 200 OK\n")
             if None != re.search(k+'/client/seek/*', self.path):
                 self.success()
@@ -106,18 +106,21 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             myLogic = myHandlers[k]
             #self.wfile.write(b"HTTP/1.1 200 OK\n")
             if None != re.search(k+'/client/store/*', self.path):
+                self.success()
                 contentLen = int(self.headers.get_all('content-length')[0])
                 data = self.rfile.read(contentLen)
                 recordID = self.path.split('/')[-1]
                 myDB.store(recordID,data)
 
             elif None != re.search(k+'/client/post/*', self.path):
+                self.success()
                 contentLen = int(self.headers.get_all('content-length')[0])
                 data = self.rfile.read(contentLen)
                 recordID = self.path.split('/')[-1]
                 myDB.post(recordID,str(data,"UTF-8"))
 
             elif None != re.search(k+'/peer/notify*', self.path):
+                self.success()
                 #print(self.path)
 
                 contentLen = int(self.headers.get_all('content-length')[0])
