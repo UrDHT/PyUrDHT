@@ -3,7 +3,7 @@
 """
 
 {
-    
+
     method:"seek",
     id:"optional, post cmd text /seek/{id}
     args:{more json}
@@ -13,11 +13,38 @@
 
 
 """
-def main(wsBindAddr,wsBindPort,hostPath):
+
+import re
+
+parentInfo = None
+wsAddr = None
+
+def setup(pInfo):
+    global parentInfo
+    global wsAddr
+    parentInfo = pInfo
+    addr = pInfo.addr.split(":")[1][2:]
+    wsAddr = "ws://%s:8023"%addr
+    #turned back on #turned off for testing. have more than 1 borks things
+    from multiprocessing import Process
+    p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/"])
+    p.start();
+
+    return {'LogicClass':None,'NetHandler':MyHandler} # returns a logic class or None""
+
+def MyHandler(self):
+    if None != re.search('websocket/client/wsinfo*', self.path):
+        self.success()
+        self.wfile.write(bytes(wsAddr,"UTF-8"))
+    else:
+        self.failure()
+
+
+def threadTarget(wsBindAddr,wsBindPort,hostPath):
     import asyncio
-    import websockets
+    from . import websockets
     import json
-    import requests
+    from . import myrequests as requests
 
     @asyncio.coroutine
     def proxy(websocket, path):
@@ -60,4 +87,3 @@ def main(wsBindAddr,wsBindPort,hostPath):
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-

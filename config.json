@@ -3,5 +3,8 @@
 	"bindPort":8000,
 	"bootstraps":"bootstrap.json",
 	"publicAddr":"",
-	"loc":""
+	"loc":"",
+	"services":{
+		"websocket":"websocketProxy"
+	}
 }

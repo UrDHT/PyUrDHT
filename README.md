@@ -2,7 +2,7 @@ PyUrDHT
 ========
 
 This project is part of the URDHT project to simplify and generalize DHTs.
-The ultimate goal is to create a solid, accessible, and powerful backend for p2p applications.
+The ultimate goal is to create a solid, accessible, and powerful backend for p2p applications and services.
 Using the Client libraries, ideally developers should be able to use the Decentralized P2P DHT as a database and messaging layer for building their own applications.
 
 Right now PyUrDHT is still in early development, and should be treated as such (expect bugs! Please report them in our issue tracker!). If you are interested in running a node to support the alpha testnet, read on:

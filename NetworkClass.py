@@ -14,21 +14,32 @@ from errors import *
 
 class Networking(object):
     def __init__(self,ip,port):
-        self.serverThread = server.getThread(ip,port)
-        self.serverThread.start()
+        self.ip = ip
+        self.port = port
+        self.handlers = {}
+        self.netHandlers = {}
 
     def setup(self,logic,data):
         """
         Lets the server know which LogicClass and DataClass to use
         """
-        server.setLinks(logic,data)
 
-    def seek(self,remote,id):
+        self.serverThread = server.getThread(self.ip,self.port)
+        self.serverThread.start()
+        self.handlers["UrDHT"] = logic
+        self.netHandlers["UrDHT"] = None
+        server.setLinks(self.handlers,self.netHandlers,data)
+
+    def addHandler(self,key,logic,netHandler):
+        self.handlers[key] = logic
+        self.netHandlers[key] = netHandler
+
+    def seek(self,service, remote, id):
         """
         This function remotely calls seek on the remote node,
         asking it to run LogicComponent.seek() on id
         """
-        path = remote.addr+"api/v0/peer/"+"seek/%s" % id
+        path = remote.addr+service+"/peer/"+"seek/%s" % id
         val = None
         try:
             r = requests.get(path)
@@ -38,10 +49,10 @@ class Networking(object):
             raise DialFailed()
         return val
 
-    def getPeers(self,remote):
+    def getPeers(self,service,remote):
         result = []
         try:
-            r = requests.get(remote.addr+"api/v0/peer/getPeers/")
+            r = requests.get(remote.addr+service+"/peer/getPeers/")
             #print(r.text)
             #print(r.text)
             #print(r.text)
@@ -54,35 +65,35 @@ class Networking(object):
             raise DialFailed()
         return result
 
-    def notify(self,remote,origin):
+    def notify(self,service,remote,origin):
         #print("SENDING NOTIFY",remote,origin)
         try:
-            r = requests.post(remote.addr+"api/v0/peer/notify", data=str(origin))
+            r = requests.post(remote.addr+service+"/peer/notify", data=str(origin))
             return r.status_code == requests.codes.ok
         except:
             return False
 
-    def store(self,remote,id,data):
+    def store(self,service,remote,id,data):
         #print("SENDING NOTIFY",remote,origin)
         try:
-            r = requests.post(remote.addr+"api/v0/client/store/"+id, data=data)
+            r = requests.post(remote.addr+service+"/client/store/"+id, data=data)
             return r.status_code == requests.codes.ok
         except:
             return False
 
 
-    def getIP(self,remote):
+    def getIP(self,service,remote):
         ip = None
         try:
-            r = requests.get(remote.addr+"api/v0/peer/getmyIP")
+            r = requests.get(remote.addr+service+"/peer/getmyIP")
             ip = r.text
         except:
             raise DialFailed()
         return ip
 
-    def ping(self,remote):
+    def ping(self,service,remote):
         try:
-            r = requests.get(remote.addr+"api/v0/peer/ping")
+            r = requests.get(remote.addr+service+"/peer/ping")
 
             return r.status_code == requests.codes.ok
         except:
