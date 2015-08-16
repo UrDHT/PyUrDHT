@@ -3,7 +3,7 @@
 """
 
 {
-    
+
     method:"seek",
     id:"optional, post cmd text /seek/{id}
     args:{more json}
@@ -17,11 +17,13 @@
 parentInfo = None
 
 def setup(pInfo):
-    global parentInfo 
+    global parentInfo
     parentInfo = pInfo
+    """#turned off for testing. have more than 1 borks things
     from multiprocessing import Process
     p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/"])
     p.start();
+    """
     return None # returns a logic class or None""
 
 
@@ -74,4 +76,3 @@ def threadTarget(wsBindAddr,wsBindPort,hostPath):
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
-
