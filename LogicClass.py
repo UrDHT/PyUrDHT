@@ -215,7 +215,7 @@ class DHTLogic(object):
 
     def onResponsibilityChange(self):
         #print("BACKUP IS HAPPENING")
-        records = list(self.database.getRecords())
+        records = list(filter(self.doIOwn, self.database.getRecords()))
         ##print(records)
         rlocs = list(map(lambda x: space.idToPoint(2, x), records))
         ##print(rlocs)
@@ -232,6 +232,7 @@ class DHTLogic(object):
         if len(candidates) == 0:
             return #im alone, no backups to send
         for loc in rlocs:
+
             l = lMap[loc]
             bestLoc = space.getClosest(loc, candidates)
             peer = self.locPeerDict[bestLoc]
