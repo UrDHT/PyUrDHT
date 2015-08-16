@@ -1,5 +1,5 @@
 {
-	"bindAddr":"127.0.0.1",
+	"bindAddr":"0.0.0.0",
 	"bindPort":8000,
 	"bootstraps":"bootstrap.json",
 	"publicAddr":"",

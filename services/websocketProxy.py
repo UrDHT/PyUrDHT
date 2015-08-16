@@ -25,11 +25,11 @@ def setup(pInfo):
     parentInfo = pInfo
     addr = pInfo.addr.split(":")[1][2:]
     wsAddr = "ws://%s:8023"%addr
-    """#turned off for testing. have more than 1 borks things
+    #turned back on #turned off for testing. have more than 1 borks things
     from multiprocessing import Process
     p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/"])
     p.start();
-    """
+
     return {'LogicClass':None,'NetHandler':MyHandler} # returns a logic class or None""
 
 def MyHandler(self):

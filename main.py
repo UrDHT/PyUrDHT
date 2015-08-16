@@ -63,7 +63,7 @@ if __name__=="__main__":
     path = config["publicAddr"]
     if len(path) == 0 and len(peerPool) > 0:
         random_peer = random.choice(peerPool)
-        pubip = net.getIP(random_peer)
+        pubip = net.getIP("UrDHT",random_peer)
         path = "http://%s:%d/" % (pubip, port)
     else:
         if path[-1] != "/":
