@@ -15,13 +15,16 @@ import re, cgi
 
 
 myHandlers = None
+myNetHandlers = None
 myDB = None
 
-def setLinks(handlers,db):
+def setLinks(handlers,netHandlers,db):
     global myHandlers
+    global myNetHandlers
     global myDB
     myHandlers = handlers
     myDB = db
+    myNetHandlers = netHandlers
     print("LINKS ARE SET")
 
 class RESTHandler(http.server.BaseHTTPRequestHandler):
@@ -97,7 +100,10 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
                 self.success()
                 self.wfile.write(bytes(str(myLogic.info),"UTF-8"))
             else:
-                self.failure()
+                if myNetHandlers[k] is not None:
+                    myNetHandlers[k](self)
+                else:
+                    self.failure()
 
 
     def do_POST(self):

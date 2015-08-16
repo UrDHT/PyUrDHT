@@ -14,19 +14,30 @@
 
 """
 
+import re
+
 parentInfo = None
+wsAddr = None
 
 def setup(pInfo):
     global parentInfo
+    global wsAddr
     parentInfo = pInfo
+    addr = pInfo.addr.split(":")[1][2:]
+    wsAddr = "ws://%s:8023"%addr
     """#turned off for testing. have more than 1 borks things
     from multiprocessing import Process
     p = Process(target=threadTarget,args=["0.0.0.0",8023,pInfo.addr+"websocket/"])
     p.start();
     """
-    return None # returns a logic class or None""
+    return {'LogicClass':None,'NetHandler':MyHandler} # returns a logic class or None""
 
-
+def MyHandler(self):
+    if None != re.search('websocket/client/wsinfo*', self.path):
+        self.success()
+        self.wfile.write(bytes(wsAddr,"UTF-8"))
+    else:
+        self.failure()
 
 
 def threadTarget(wsBindAddr,wsBindPort,hostPath):

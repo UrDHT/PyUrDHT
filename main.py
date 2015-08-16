@@ -96,23 +96,28 @@ if __name__=="__main__":
 
     service_ids = config["services"]
     services = {}
-    time.sleep(5)
+    #time.sleep(5)
     for k in service_ids.keys():
-        myLogicClass = None
+        serviceInfo = None
         command = """
 import %s as foo
-myLogicClass = foo.setup(myPeerInfo)
+serviceInfo = foo.setup(myPeerInfo)
 """ % ("services."+service_ids[k])
         exec(command)
+        myLogicClass = serviceInfo['LogicClass']
         if(myLogicClass is None):
+            print("Loading default logic class)")
             myLogicClass = LogicClass.DHTLogic
 
         services[k] = myLogicClass(myPeerInfo,k)
-        net.addHandler(k,services[k])
+        net.addHandler(k,services[k],serviceInfo['NetHandler'])
         services[k].setup(net,data)
-        subnetPeerPool = []
+        subnetPeerPool = [myPeerInfo]
         try:
             c = json.loads(myClient.get(k))
+            print(c)
+            if len(c) == 0:
+                raise Exception()
             subnetPeerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in c]
         except:
             print("Peer discovery for %s failed. May be only peer in subnet" % k)

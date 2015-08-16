@@ -17,6 +17,7 @@ class Networking(object):
         self.ip = ip
         self.port = port
         self.handlers = {}
+        self.netHandlers = {}
 
     def setup(self,logic,data):
         """
@@ -26,10 +27,12 @@ class Networking(object):
         self.serverThread = server.getThread(self.ip,self.port)
         self.serverThread.start()
         self.handlers["UrDHT"] = logic
-        server.setLinks(self.handlers,data)
+        self.netHandlers["UrDHT"] = None
+        server.setLinks(self.handlers,self.netHandlers,data)
 
-    def addHandler(self,key,logic):
+    def addHandler(self,key,logic,netHandler):
         self.handlers[key] = logic
+        self.netHandlers[key] = netHandler
 
     def seek(self,service, remote, id):
         """
