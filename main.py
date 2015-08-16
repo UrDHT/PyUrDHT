@@ -83,8 +83,11 @@ if __name__=="__main__":
     net.setup(logic,data)
 
     logic.setup(net,data)
-
-    myClient = client.UrDHTClient("UrDHT",[json.loads(str(myPeerInfo))])
+    clientPeers = [json.loads(str(myPeerInfo))]
+    if len(peerPool) > 0:
+        strings = map(str,peerPool)
+        clientPeers = json.loads("[%s]"%",".join(strings))
+    myClient = client.UrDHTClient("UrDHT",clientPeers)
 
     logic.join(peerPool)
 
@@ -109,8 +112,8 @@ myLogicClass = foo.setup(myPeerInfo)
         services[k].setup(net,data)
         subnetPeerPool = []
         try:
-            c = client.bootstrapSubnet(k,myClient.knownPeers)
-            subnetPeerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in c.knownPeers]
+            c = json.loads(myClient.get(k))
+            subnetPeerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in c]
         except:
             print("Peer discovery for %s failed. May be only peer in subnet" % k)
         services[k].join(subnetPeerPool)
