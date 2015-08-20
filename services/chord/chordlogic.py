@@ -72,13 +72,15 @@ class ChordLogic(object):
             pass
         return True
 
+    def join(self, peers):
+        pass
+
     def doIOwn(self,key):
         """
         Looks to see if I own some key.
         If seek returns myself, then I'm the closest
         """
         return self.seek(key) == self.loc
-
     def seek(self, key):
         loc = space.idToPoint(key)
 
