@@ -32,6 +32,9 @@ def isPointBetweenRightInclusive(target, left, right):
 
 #TODO don't assume max is 160
 MAX = 2**160
+
+
+#TODO distance sucks
 def distance(a, b):
     assert(isinstance(a, int))
     dist =  b - a
@@ -39,5 +42,6 @@ def distance(a, b):
         return MAX + dist
     return dist
 
-    
-
+def getClosest(point,candidates):
+    """Returns the candidate clostest to point."""
+    return min(candidates,key=lambda x: distance(point,x))

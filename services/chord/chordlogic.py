@@ -59,14 +59,37 @@ class ChordLogic(object):
         self.database =  database
         self.janitorThread =  ChordJanitor(self)
 
+    def shutdown(self):
+        """
+        Kills the maintenance thread, waits for the thread to realize it.
+        Returns True when done
+        """
+        self.janitorThread.running = False
+        #sanity check the following
+        with self.janitorThread.runningLock:
+            pass
+        return True
+
+    def doIOwn(self,key):
+        """
+        Looks to see if I own some key.
+        If seek returns myself, then I'm the closest
+        """
+        return self.seek(key) == self.loc
+
     def seek(self, key):
         loc = space.idToPoint(key)
 
+    def getPeers(self):
+        pass
 
     def getNotified(self, origin):
         with self.notifiedLock:
             self.notifiedMe.append(origin)
         return True
+
+    def onResponsibilityChange(self):
+        pass
 
 class ChordJanitor(object):
     def __init__(self, parent):
@@ -77,3 +100,6 @@ class ChordJanitor(object):
         self.parent = parent
         self.running = True
         self.runningLock = threading.Lock()
+
+    def rectify(self):
+        pass
