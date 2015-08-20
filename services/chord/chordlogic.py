@@ -39,7 +39,9 @@ class ChordLogic(object):
         self.network = None
         self.database = None
         self.key = key
-        self.shortPeers = []
+        self.predList = [] 
+        self.succList = []
+        self.shortPeers = [self.predList, self.succList]
         self.longPeers = []
         self.seekCandidates = []
         self.notifiedMe = []
@@ -101,5 +103,16 @@ class ChordJanitor(object):
         self.running = True
         self.runningLock = threading.Lock()
 
+
+    """
+    step 1: stabilize 
+    step 1.5: update sucessorlist 
+    step 2: notify, which causes notified member to rectify
+    """
+
+    def stabilize(self):
+        pass
+    def notify(self):
+        pass
     def rectify(self):
         pass
