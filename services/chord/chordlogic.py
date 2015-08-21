@@ -1,5 +1,9 @@
 import chordspacemath as space
 import threading
+import random
+
+class DialFailed(Exception):
+    pass
 
 class PeerInfo(object):
 
@@ -72,8 +76,47 @@ class ChordLogic(object):
             pass
         return True
 
+    #TODO: Reimplement chordlike-join
     def join(self, peers):
-        pass
+        """
+        peers: some list of peers, which are other nodes on the network.
+        peers is most likely a list of nodes for bootstrapping, a specific list
+        which was included in the config file.
+
+        join joins the network which peers is on.
+        We use a random peer from peers to seek for the node currently resonsible for my id
+        """
+        if peers:
+            print("Joining Network")
+            found_peers = set(peers)
+            # Assuming we use a bootstrap list,
+            # we shouldn't always select the first.
+            # Bad load balancing karma
+
+            patron_peer = random.choice(peers)
+            best_parent = patron_peer
+            new_best = None
+            inital_peers = None
+            try:
+                while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
+                    new_best = self.network.seek(self.key, best_parent, self.info.id)
+                    found_peers.add(new_best)
+                    best_parent = new_best
+                inital_peers = self.network.getPeers(self.key,best_parent)
+            except DialFailed:
+                peers.remove(patron_peer)
+                return self.join(peers)
+
+
+            if inital_peers:
+                for p in inital_peers:
+                    found_peers.add(p)
+            with self.peersLock:
+                self.shortPeers = list(found_peers)
+            print("joined with:",list(found_peers))
+            ##print("done join, staring worker")
+        self.janitorThread.start()
+        return True
 
     def doIOwn(self,key):
         """
@@ -81,11 +124,20 @@ class ChordLogic(object):
         If seek returns myself, then I'm the closest
         """
         return self.seek(key) == self.loc
+    
     def seek(self, key):
         loc = space.idToPoint(key)
+        candidates =  None
 
     def getPeers(self):
-        pass
+        """
+        Returns a list of all the peers I know.
+        In otherwords, my neighbors and my shortcuts
+        """
+        with self.peersLock:
+            return self.succList[:] +  self.predList[:]  + self.longPeers[:]
+
+
 
     def getNotified(self, origin):
         with self.notifiedLock:
@@ -94,6 +146,8 @@ class ChordLogic(object):
 
     def onResponsibilityChange(self):
         pass
+
+
 
 class ChordJanitor(object):
     def __init__(self, parent):
@@ -114,7 +168,9 @@ class ChordJanitor(object):
 
     def stabilize(self):
         pass
+
     def notify(self):
         pass
+
     def rectify(self):
         pass
