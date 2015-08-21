@@ -175,6 +175,8 @@ class DHTLogic(object):
         """
         return self.seek(key) == self.loc
 
+
+    #TODO HAVE WE ACTUALLY TESTED SEEK TO MAKE SURE IF I CALL IT AND I SHOULD BE THE ANSWER, IT COMES BACK WITH ME?
     def seek(self,key):
         """
         Answers the question: of the nodes I know, which is the closest to key?
