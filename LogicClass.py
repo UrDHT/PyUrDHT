@@ -224,7 +224,7 @@ class DHTLogic(object):
         lMap = {}
         for l,p in zip(rlocs,records):
             lMap[l]=p
-        canidates = None
+        candidates = None
         with self.peersLock:
             candidates = self.seekCandidates[:]
         if candidates is None:

@@ -125,14 +125,19 @@ class ChordLogic(object):
         """
         return self.seek(key) == self.loc
     
+
+    #TODO MAKE SURE THIS ACTUALLY WORKS
     def seek(self, key):
+
         loc = space.idToPoint(key)
         candidates =  None
         with self.peersLock:
             candidates = self.succList[:] + self.longPeers[:]
         if len(candidates) == 0:
             return self.info # We have issues
-        
+        bestLoc = space.getClosest(loc, candidates)
+        peer = self.locPeerDict[bestLoc]
+        return peer
 
     def getPeers(self):
         """
