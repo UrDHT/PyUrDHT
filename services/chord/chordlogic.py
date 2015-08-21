@@ -123,8 +123,8 @@ class ChordLogic(object):
         Looks to see if I own some key.
         If seek returns myself, then I'm the closest
         """
-        target = 
-    
+        point =  space.idToPoint(key)
+        return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
 
     #TODO MAKE SURE THIS ACTUALLY WORKS
     def seek(self, key):
@@ -145,9 +145,15 @@ class ChordLogic(object):
         In otherwords, my neighbors and my shortcuts
         """
         with self.peersLock:
-            return self.succList[:] +  self.predList[:]  + self.longPeers[:]
+            return self.succList[:] +  [self.predecessor] + self.longPeers[:]
 
+    def getSuccList(self):
+        with self.peersLocks:
+            return self.succList[:]
 
+    def getPredecessor(self):
+        with self.peersLocks:
+            return self.predecessor
 
     def getNotified(self, origin):
         with self.notifiedLock:
@@ -155,9 +161,7 @@ class ChordLogic(object):
         return True
 
     def onResponsibilityChange(self):
-        pass
-
-
+        pass    
 
 class ChordJanitor(object):
     def __init__(self, parent):

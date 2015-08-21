@@ -18,7 +18,7 @@ import pymultihash as multihash
 
 
 
-def id2Point(id):
+def idToPoint(id):
     """ 
     Converts a hashkey into some point
 
