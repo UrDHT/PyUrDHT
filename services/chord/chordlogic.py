@@ -43,9 +43,9 @@ class ChordLogic(object):
         self.network = None
         self.database = None
         self.key = key
-        self.predList = [] 
+        self.predecessor = None
         self.succList = []
-        self.shortPeers = [self.predList, self.succList]
+        self.shortPeers = [self.predecessor, self.succList]
         self.longPeers = []
         self.seekCandidates = []
         self.notifiedMe = []
@@ -123,7 +123,7 @@ class ChordLogic(object):
         Looks to see if I own some key.
         If seek returns myself, then I'm the closest
         """
-        return self.seek(key) == self.loc
+        target = 
     
 
     #TODO MAKE SURE THIS ACTUALLY WORKS
