@@ -123,17 +123,33 @@ class ChordLogic(object):
         Looks to see if I own some key.
         If seek returns myself, then I'm the closest
         """
-        point =  space.idToPoint(key)
-        return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
+        with self.peersLock:
+            point = space.idToPoint(key)
+            return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
+
+    def doesMySuccessorOwn(self,key):
+        """
+        Does my successor own this key
+        """
+        with self.peersLock:
+            point = space.idToPoint(key)
+            return space.isPointBetweenRightInclusive(point, self.loc, self.sucessorlist[0].loc)
+
 
     #TODO MAKE SURE THIS ACTUALLY WORKS
     def seek(self, key):
 
+        if self.doIOwn(key):
+            return self.info
+        if self.doesMySuccessorOwn(key):
+            # do I need a lock?
+            return self.sucessorlist[0]
         loc = space.idToPoint(key)
         candidates =  None
         with self.peersLock:
             candidates = self.succList[:] + self.longPeers[:]
         if len(candidates) == 0:
+            print("Explative Deleted, this node is all alone!")
             return self.info # We have issues
         bestLoc = space.getClosest(loc, candidates)
         peer = self.locPeerDict[bestLoc]
