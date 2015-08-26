@@ -164,7 +164,7 @@ class ChordLogic(object):
 
     def getPredecessor(self):
         with self.peersLocks:
-            return self.predecessor
+            return [self.predecessor]
 
     def getNotified(self, origin):
         with self.notifiedLock:
