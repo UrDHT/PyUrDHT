@@ -19,11 +19,11 @@ import pymultihash as multihash
 
 
 def idToPoint(id):
-    """ 
+    """
     Converts a hashkey into some point
 
     Keyword Arguments:
-    id -- the multihash id/key of a node/value 
+    id -- the multihash id/key of a node/value
     """
     idLong = multihash.parseHash(id)
     return idLong
@@ -37,7 +37,7 @@ def isPointBetween(target, left, right):
     #print target, "<", right, "and", target, ">", left, target < right and target > left
     if target < right and target > left:
         return True
-    #print left, ">", right, left > right 
+    #print left, ">", right, left > right
     if left > right :
         #print left, ">", target, "and", target, "<", right, left > target and target < right
         if left > target and target < right:
@@ -63,7 +63,7 @@ MAX = 2**160
 def distance(origin, destination):
     """
     measures the distance it takes to get to the destination
-    traveling from origin 
+    traveling from origin
     """
     assert(isinstance(origin, int))
     dist =  destination - origin

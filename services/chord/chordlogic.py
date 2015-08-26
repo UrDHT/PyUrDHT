@@ -79,20 +79,16 @@ class ChordLogic(object):
     #TODO: Reimplement chordlike-join
     def join(self, peers):
         """
-        peers: some list of peers, which are other nodes on the network.
-        peers is most likely a list of nodes for bootstrapping, a specific list
-        which was included in the config file.
-
-        join joins the network which peers is on.
-        We use a random peer from peers to seek for the node currently resonsible for my id
+        In this version of join, we are either provided our peers
+        from the lookup, or we do it ourselves.
         """
         if peers:
             print("Joining Network")
             found_peers = set(peers)
+
             # Assuming we use a bootstrap list,
             # we shouldn't always select the first.
             # Bad load balancing karma
-
             patron_peer = random.choice(peers)
             best_parent = patron_peer
             new_best = None
@@ -106,7 +102,6 @@ class ChordLogic(object):
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
-
 
             if inital_peers:
                 for p in inital_peers:
@@ -177,7 +172,7 @@ class ChordLogic(object):
         return True
 
     def onResponsibilityChange(self):
-        pass    
+        pass
 
 class ChordJanitor(object):
     def __init__(self, parent):
@@ -191,8 +186,8 @@ class ChordJanitor(object):
 
 
     """
-    step 1: stabilize 
-    step 1.5: update sucessorlist 
+    step 1: stabilize
+    step 1.5: update sucessorlist
     step 2: notify, which causes notified member to rectify
     """
 
