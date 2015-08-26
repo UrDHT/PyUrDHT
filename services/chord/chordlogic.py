@@ -158,7 +158,7 @@ class ChordLogic(object):
         with self.peersLock:
             return self.succList[:] +  [self.predecessor] + self.longPeers[:]
 
-    def getSuccList(self):
+    def getSuccessors(self):
         with self.peersLocks:
             return self.succList[:]
 
