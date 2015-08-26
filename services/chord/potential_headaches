@@ -1,0 +1,3 @@
+trouble spots:
+
+predecessor returns an object and the rest of related peer code returns lists
