@@ -59,6 +59,7 @@ class ChordLogic(object):
         self.janitorThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
+        #TODO: MOAR LOCKS
 
     def setup(self, network, database):
         self.network = network
@@ -194,9 +195,6 @@ class ChordLogic(object):
             with self.peersLock:
                 self.succList = [newSucc] + newList
                 break
-            
-
-
 
     def notify(self):  #if notify fails, ignore and let stabilize handle it
         try:
@@ -206,14 +204,33 @@ class ChordLogic(object):
 
     def rectify(self):
         candidates = [] 
+        
+        # empty the notified list
         with self.notifiedLock:
             candidates = self.notifiedMe[:]
             self.notifiedMe = [] 
+        
+
         for p in candidates:
+            #try pinging the notifier first
+            try: 
+                self.network.ping(self.key, p)
+            except:  #do nothing, skip
+                continue
+            
+            #make sure the current pred is still alive
             try:
-                pass
-            except:
-                pass
+                self.network.ping(self.key, self.predecessor)
+            except:  # well, we have to replace it now, don't we
+                with self.peersLock:
+                    self.predecessor = p 
+                    continue
+            with self.peersLock:  #TODO WHERE SHOULD THE LOCK GO?
+                if self.predecessor is None:
+                    self.predecessor = p
+                elif space.isPointBetween(p.loc, self.predecessor.loc, self.loc):
+                    self.predecessor = p 
+
 
     def createDict(self):
         pass
