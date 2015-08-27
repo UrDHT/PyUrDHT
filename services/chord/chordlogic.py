@@ -241,8 +241,10 @@ class ChordLogic(object):
     def rectify(self):
         """
         With rectify, a node checks if the predecessor is alive
-        Then, we go thru the nodes which notified us to see 
-        if they're better predecessors
+        Then, we go thru the nodes which notified us to see if 
+        they're better than our predecessor.
+
+        If so, they replace our predecessor
 
         """
 
@@ -256,7 +258,9 @@ class ChordLogic(object):
 
         for p in candidates:
             
-            try:    #try pinging the notifier first
+
+            #try pinging the notifier first, skip if dead
+            try:    
                 self.network.ping(self.key, p)
             except: #do nothing, skip
                 continue
@@ -268,6 +272,8 @@ class ChordLogic(object):
                 with self.peersLock:
                     self.predecessor = p 
                     continue
+            
+
             with self.peersLock:  #TODO WHERE SHOULD THE LOCK GO?
                 if self.predecessor is None:
                     self.predecessor = p
