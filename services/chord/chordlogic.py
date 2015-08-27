@@ -170,6 +170,54 @@ class ChordLogic(object):
             self.notifiedMe.append(origin)
         return True
 
+
+    def stabilize(self):
+        while self.succList:   
+            newSucc =  self.succList[0]
+            newList = []
+            predOfSucc = self.info
+            try:
+                predOfSucc = self.network.getPredecessor(self.key, self.succList[0])
+                newList = newList = self.network.getSuccessors(self.key, self.succList[0])
+            except DialFailed:  # Our successor is dead, long live the new successor
+                if self.succList:
+                    with self.peersLock:
+                        self.succList = self.succList[1:]
+                continue
+
+            if space.isPointBetween(predOfSucc.loc, self.loc, self.succList[0].loc):
+                newSucc = predOfSucc
+                try:
+                    newList = self.network.getSuccessors(self.key, predOfSucc)
+                except DialFailed:  # if we can't communicate with predOfSucc
+                    break
+            with self.peersLock:
+                self.succList = [newSucc] + newList
+                break
+            
+
+
+
+    def notify(self):  #if notify fails, ignore and let stabilize handle it
+        try:
+            self.network.notify(self.key, self.succList[0], self.info)
+        except:
+            print("failed to nofify", self.succList[0])
+
+    def rectify(self):
+        candidates = [] 
+        with self.notifiedLock:
+            candidates = self.notifiedMe[:]
+            self.notifiedMe = [] 
+        for p in candidates:
+            try:
+                pass
+            except:
+                pass
+
+    def createDict(self):
+        pass
+
     def onResponsibilityChange(self):
         pass
 
@@ -190,11 +238,3 @@ class ChordJanitor(object):
     step 2: notify, which causes notified member to rectify
     """
 
-    def stabilize(self):
-        pass
-
-    def notify(self):
-        pass
-
-    def rectify(self):
-        pass
