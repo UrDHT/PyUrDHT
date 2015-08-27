@@ -98,7 +98,7 @@ class ChordLogic(object):
                     new_best = self.network.seek(self.key, best_parent, self.info.id)
                     found_peers.add(new_best)
                     best_parent = new_best
-                inital_peers = self.network.getPeers(self.key,best_parent)
+                initalSuccessors = self.network.getSuccessors(self.key, best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
