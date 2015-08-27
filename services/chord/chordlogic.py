@@ -59,9 +59,13 @@ class ChordLogic(object):
         self.janitorThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
-        #TODO: MOAR LOCKS
+        self.prod
+    #TODO: MOAR LOCKS
 
     def setup(self, network, database):
+    """
+    Setup just connects Logic to the other components
+    """
         self.network = network
         self.database =  database
         self.janitorThread =  ChordJanitor(self)
@@ -81,7 +85,7 @@ class ChordLogic(object):
     def join(self, peers):
         """
         In this version of join, we are either provided our peers
-        from the lookup, or we do it ourselves.
+    from a lookup operation
         """
         if peers:
             print("Joining Network")
@@ -117,6 +121,8 @@ class ChordLogic(object):
         """
         Looks to see if I own some key.
         If seek returns myself, then I'm the closest
+
+    MUST LOCK THE PREDECESSOR
         """
         with self.peersLock:
             point = space.idToPoint(key)
@@ -125,6 +131,8 @@ class ChordLogic(object):
     def doesMySuccessorOwn(self,key):
         """
         Does my successor own this key
+
+    MUST LOCK THE SUCESSOR
         """
         with self.peersLock:
             point = space.idToPoint(key)
@@ -133,7 +141,9 @@ class ChordLogic(object):
 
     #TODO MAKE SURE THIS ACTUALLY WORKS
     def seek(self, key):
-
+    """
+    Returns the node I know either responsible for or closest to key
+    """
         if self.doIOwn(key):
             return self.info
         if self.doesMySuccessorOwn(key):
@@ -156,7 +166,7 @@ class ChordLogic(object):
         In otherwords, my neighbors and my shortcuts
         """
         with self.peersLock:
-            return self.succList[:] +  [self.predecessor] + self.longPeers[:]
+            return self.succList[:] + [self.predecessor] + self.longPeers[:]
 
     def getSuccessors(self):
         with self.peersLocks:
@@ -173,25 +183,47 @@ class ChordLogic(object):
 
 
     def stabilize(self):
-        while self.succList:   
-            newSucc =  self.succList[0]
+    """
+    Stabilize checks the successor's predecessor, predOfSucc.
+    
+    If predOfSucc is better than the current successor
+    predOfSucc become the head of the new succList.
+
+    Either way, succList is updated
+
+    """
+    
+        while self.succList:    # So long as we have a potential successor
+
+            #initialize the new lists      
+            newSucc =  self.succList[0]  
             newList = []
             predOfSucc = self.info
+            
+            # get our successor's predeccessor
+            # if fail, remove the head of succList and retry the loop
             try:
                 predOfSucc = self.network.getPredecessor(self.key, self.succList[0])
                 newList = newList = self.network.getSuccessors(self.key, self.succList[0])
-            except DialFailed:  # Our successor is dead, long live the new successor
+            except DialFailed:  # Our successor is dead 
                 if self.succList:
-                    with self.peersLock:
+                    with self.peersLock: # long live the new successor
                         self.succList = self.succList[1:]
                 continue
 
+            # if our predOfSucc is better, use it 
+            # if our call fails that means the succ needs to update his pred
+            # In that case we use our current successor and his info
             if space.isPointBetween(predOfSucc.loc, self.loc, self.succList[0].loc):
-                newSucc = predOfSucc
                 try:
                     newList = self.network.getSuccessors(self.key, predOfSucc)
                 except DialFailed:  # if we can't communicate with predOfSucc
-                    break
+                    with self.peersLock:
+                        self.succList = [newSucc] + newList
+                        break
+                newSucc = predOfSucc
+
+
             with self.peersLock:
                 self.succList = [newSucc] + newList
                 break
