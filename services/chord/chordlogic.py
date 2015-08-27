@@ -25,7 +25,7 @@ class PeerInfo(object):
 
     def __str__(self):
         return """{"id":"%s", "addr":"%s", "loc":[%f,%f]}""" % \
-            (self.id, self.addr, self.loc[0], self.loc[1])
+            (self.id, self.addr, self.loc)
 
     def __hash__(self):
         return hash((hash(self.id), hash(self.addr)))
@@ -42,7 +42,7 @@ class ChordLogic(object):
     def __init__(self, peerinfo, key):
         self.network = None
         self.database = None
-        self.key = key
+        self.key = key      #TODO Rename key
         self.predecessor = None
         self.succList = []
         self.shortPeers = [self.predecessor, self.succList]
@@ -98,11 +98,10 @@ class ChordLogic(object):
                     new_best = self.network.seek(self.key, best_parent, self.info.id)
                     found_peers.add(new_best)
                     best_parent = new_best
-                inital_peers = self.network.getPeers(self.key,best_parent)
+                inital_peers = self.network.getSuccessors(self.key, best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
-
             if inital_peers:
                 for p in inital_peers:
                     found_peers.add(p)
@@ -199,3 +198,12 @@ class ChordJanitor(object):
 
     def rectify(self):
         pass
+
+
+def test():
+
+    sorted()
+
+
+if __name__ == '__main__':
+    test()
