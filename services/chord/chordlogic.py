@@ -24,8 +24,8 @@ class PeerInfo(object):
         self.loc = loc
 
     def __str__(self):
-        return """{"id":"%s", "addr":"%s", "loc":[%f,%f]}""" % \
-            (self.id, self.addr, self.loc[0], self.loc[1])
+        return """{"id":"%s", "addr":"%s", "loc":"%s"}""" % \
+            (self.id, self.addr, self.loc)
 
     def __hash__(self):
         return hash((hash(self.id), hash(self.addr)))
@@ -42,7 +42,7 @@ class ChordLogic(object):
     def __init__(self, peerinfo, key):
         self.network = None
         self.database = None
-        self.key = key
+        self.key = key      #TODO Rename key
         self.predecessor = None
         self.succList = []
         self.shortPeers = [self.predecessor, self.succList]
@@ -98,17 +98,16 @@ class ChordLogic(object):
                     new_best = self.network.seek(self.key, best_parent, self.info.id)
                     found_peers.add(new_best)
                     best_parent = new_best
-                initalSuccessors = self.network.getSuccessors(self.key, best_parent)
+                inital_peers = self.network.getSuccessors(self.key, best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
-
             if inital_peers:
                 for p in inital_peers:
                     found_peers.add(p)
             with self.peersLock:
-                self.shortPeers = list(found_peers)
-            print("joined with:",list(found_peers))
+                self.succList=[best_parent] + list(found_peers)[:-1]
+            print("joined with:", list(found_peers))
             ##print("done join, staring worker")
         self.janitorThread.start()
         return True
@@ -128,7 +127,7 @@ class ChordLogic(object):
         """
         with self.peersLock:
             point = space.idToPoint(key)
-            return space.isPointBetweenRightInclusive(point, self.loc, self.sucessorlist[0].loc)
+            return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
 
 
     #TODO MAKE SURE THIS ACTUALLY WORKS
@@ -138,7 +137,7 @@ class ChordLogic(object):
             return self.info
         if self.doesMySuccessorOwn(key):
             # do I need a lock?
-            return self.sucessorlist[0]
+            return self.succList[0]
         loc = space.idToPoint(key)
         candidates =  None
         with self.peersLock:

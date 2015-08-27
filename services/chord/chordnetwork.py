@@ -8,7 +8,6 @@ see: https://github.com/UrDHT/DevelopmentPlan/blob/master/Network.md
 """
 import server
 import myrequests as requests
-import json
 import util
 from errors import *
 
