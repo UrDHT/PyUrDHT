@@ -24,7 +24,7 @@ class PeerInfo(object):
         self.loc = loc
 
     def __str__(self):
-        return """{"id":"%s", "addr":"%s", "loc":[%f,%f]}""" % \
+        return """{"id":"%s", "addr":"%s", "loc":"%s"}""" % \
             (self.id, self.addr, self.loc)
 
     def __hash__(self):
@@ -106,8 +106,8 @@ class ChordLogic(object):
                 for p in inital_peers:
                     found_peers.add(p)
             with self.peersLock:
-                self.shortPeers = list(found_peers)
-            print("joined with:",list(found_peers))
+                self.succList=[best_parent] + list(found_peers)[:-1]
+            print("joined with:", list(found_peers))
             ##print("done join, staring worker")
         self.janitorThread.start()
         return True
@@ -127,7 +127,7 @@ class ChordLogic(object):
         """
         with self.peersLock:
             point = space.idToPoint(key)
-            return space.isPointBetweenRightInclusive(point, self.loc, self.sucessorlist[0].loc)
+            return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
 
 
     #TODO MAKE SURE THIS ACTUALLY WORKS
@@ -137,7 +137,7 @@ class ChordLogic(object):
             return self.info
         if self.doesMySuccessorOwn(key):
             # do I need a lock?
-            return self.sucessorlist[0]
+            return self.succList[0]
         loc = space.idToPoint(key)
         candidates =  None
         with self.peersLock:
@@ -199,11 +199,3 @@ class ChordJanitor(object):
     def rectify(self):
         pass
 
-
-def test():
-
-    sorted()
-
-
-if __name__ == '__main__':
-    test()
