@@ -183,15 +183,15 @@ class ChordLogic(object):
 
 
     def stabilize(self):
-    """
-    Stabilize checks the successor's predecessor, predOfSucc.
-    
-    If predOfSucc is better than the current successor
-    predOfSucc become the head of the new succList.
+        """
+        Stabilize checks the successor's predecessor, predOfSucc.
+        
+        If predOfSucc is better than the current successor
+        predOfSucc become the head of the new succList.
 
-    Either way, succList is updated
+        Either way, succList is updated
 
-    """
+        """
     
         while self.succList:    # So long as we have a potential successor
 
@@ -216,25 +216,36 @@ class ChordLogic(object):
             # In that case we use our current successor and his info
             if space.isPointBetween(predOfSucc.loc, self.loc, self.succList[0].loc):
                 try:
-                    newList = self.network.getSuccessors(self.key, predOfSucc)
+                    temp = self.network.getSuccessors(self.key, predOfSucc)
+                    newList = temp
                 except DialFailed:  # if we can't communicate with predOfSucc
                     with self.peersLock:
                         self.succList = [newSucc] + newList
                         break
                 newSucc = predOfSucc
 
-
+            # update the successor list
             with self.peersLock:
                 self.succList = [newSucc] + newList
                 break
 
     def notify(self):  #if notify fails, ignore and let stabilize handle it
+        """
+        notify simples tells the successor I exist 
+        """
         try:
             self.network.notify(self.key, self.succList[0], self.info)
         except:
             print("failed to nofify", self.succList[0])
 
     def rectify(self):
+        """
+        With rectify, a node checks if the predecessor is alive
+        Then, we go thru the nodes which notified us to see 
+        if they're better predecessors
+
+        """
+
         candidates = [] 
         
         # empty the notified list
@@ -244,10 +255,10 @@ class ChordLogic(object):
         
 
         for p in candidates:
-            #try pinging the notifier first
-            try: 
+            
+            try:    #try pinging the notifier first
                 self.network.ping(self.key, p)
-            except:  #do nothing, skip
+            except: #do nothing, skip
                 continue
             
             #make sure the current pred is still alive
