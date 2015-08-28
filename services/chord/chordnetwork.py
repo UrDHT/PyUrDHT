@@ -1,22 +1,23 @@
 """
-
 This file describes the Networking class and associated helper threads/objects
 see: https://github.com/UrDHT/DevelopmentPlan/blob/master/Network.md
-
-
-
 """
-import server
+import chordserver as server
 import myrequests as requests
-import util
-from errors import *
+from chordlogic import PeerInfo
+
+
+class DialFailed(Exception):
+    pass
+
 
 class Networking(object):
-    def __init__(self,ip,port):
+    def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.handlers = {}
         self.netHandlers = {}
+
 
     def setup(self,logic,data):
         """
@@ -38,12 +39,12 @@ class Networking(object):
         This function remotely calls seek on the remote node,
         asking it to run LogicComponent.seek() on id
         """
-        path = remote.addr+service+"/peer/"+"seek/%s" % id
+        path = remote.addr + service + "/peer/" + "seek/%s" % id
         val = None
         try:
             r = requests.get(path)
             results = r.json()
-            val = util.PeerInfo(results["id"],results["addr"],results["loc"])
+            val = PeerInfo(results["id"], results["addr"], results["loc"])
         except Exception:
             raise DialFailed()
         return val
