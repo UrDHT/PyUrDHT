@@ -17,7 +17,7 @@ import pymultihash as multihash
 
 # TODO don't assume max is 160
 KEYSIZE = 160
-MAX = 2**KEYSIZE
+MAX = 2 ** KEYSIZE
 
 
 def idToPoint(id):
@@ -72,9 +72,3 @@ def getClosest(point, candidates):
 
 def getBestSuccessor(point, candidates):
     return min(candidates, key=lambda x: distance(point, x.loc))
-
-if __name__ == '__main__':
-    testCandidates = [int(2**159 - 7000), 100, 400, 499, 600]
-    print(getClosest(20, testCandidates))
-    print(getBestSuccessor(500, testCandidates))
-    print(list(map(lambda x: distance(x, 500), testCandidates)))
