@@ -67,11 +67,11 @@ def distance(origin, destination):
 
 def getClosest(point, candidates):
     """Returns the candidate closest to point without going over."""
-    return min(candidates, key=lambda x: distance(x, point))
+    return min(candidates, key=lambda x: distance(x.loc, point))
 
 
 def getBestSuccessor(point, candidates):
-    return min(candidates, key=lambda x: distance(point, x))
+    return min(candidates, key=lambda x: distance(point, x.loc))
 
 if __name__ == '__main__':
     testCandidates = [int(2**159 - 7000), 100, 400, 499, 600]

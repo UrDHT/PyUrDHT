@@ -51,7 +51,6 @@ class ChordLogic(object):
         self.longPeers = []
         self.seekCandidates = []
         self.notifiedMe = []
-        self.locPeerDict = {}
         self.info = peerinfo
         if peerinfo.loc is None:
             self.loc = space.idToPoint(2, self.info.id)
@@ -155,9 +154,8 @@ class ChordLogic(object):
         if len(candidates) == 0:
             print("Explative Deleted, this node is all alone!")
             return self.info  # We have issues
-        bestLoc = space.getClosest(loc, candidates)
-        peer = self.locPeerDict[bestLoc]
-        return peer
+        closestPeer = space.getClosest(loc, candidates)
+        return closestPeer
 
     def getPeers(self):
         """
