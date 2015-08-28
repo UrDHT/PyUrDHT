@@ -107,15 +107,38 @@ class ChordLogic(object):
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
-            if inital_peers:
-                for p in inital_peers:
-                    found_peers.add(p)
             with self.peersLock:
-                self.succList = [best_parent] + list(found_peers)[:-1]
+                self.succList = [best_parent] + inital_peers[:-1]
             print("joined with:", list(found_peers))
 
         self.janitorThread.start()
         return True
+
+    def lookup(self, key):
+        """
+        Iterative lookup of key
+
+        key:  a multihash key
+        returns -> node responsible for key
+        """
+        if self.doIOwn(key):
+            return self.info
+        if self.doesMySuccessorOwn(key):
+            return self.succList[0]
+
+        best = self.seek(key)
+        newBest = None
+        requests = 0  # safety feature to guard against possible incompetence
+        while (newBest is None or newBest.loc != best.loc) and requests < 5 * MAX_LONGPEERS:
+            try:
+                new_best = self.network.seek(self.key, best_parent, self.info.id)
+            except:
+                raise DialFailed
+            finally:
+                requests += 1
+        return  best
+
+
 
     def doIOwn(self, key):
         """
@@ -145,7 +168,6 @@ class ChordLogic(object):
         if self.doIOwn(key):
             return self.info
         if self.doesMySuccessorOwn(key):
-            # do I need a lock?
             return self.succList[0]
         loc = space.idToPoint(key)
         candidates = None
