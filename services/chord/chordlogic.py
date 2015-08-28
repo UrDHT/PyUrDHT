@@ -1,7 +1,11 @@
 import chordspacemath as space
 import threading
+import time
 import random
 from chordnetwork import DialFailed
+
+MAX_LONGPEERS = space.KEYSIZE
+MAINTENANCE_SLEEP_PERIOD = 10  # set a periodic sleep of 10s on maintenance
 
 
 class PeerInfo(object):
@@ -291,3 +295,17 @@ class ChordJanitor(object):
         step 1.5: update sucessorlist
         step 2: notify, which causes notified member to rectify
         """
+
+    def run(self):
+        with self.runningLock:
+            while self.running:
+                self.cleanup()
+                time.sleep(MAINTENANCE_SLEEP_PERIOD)
+
+    def cleanup(self):
+        self.parent.stablize()
+        self.parent.notify()
+        self.parent.rectify()
+
+    def updateLongPeers(self):
+        pass
