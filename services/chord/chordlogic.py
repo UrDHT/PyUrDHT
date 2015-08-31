@@ -53,14 +53,13 @@ class ChordLogic(object):
         self.notifiedMe = []
         self.info = peerinfo
         if peerinfo.loc is None:
-            self.loc = space.idToPoint(2, self.info.id)
+            self.loc = space.idToPoint(self.info.id)
             self.info.loc = self.loc
         else:
             self.loc = peerinfo.loc
         self.janitorThread = None
-        self.peersLock = threading.Lock()
-        self.notifiedLock = threading.Lock()
-        self.prod
+        self.peersLock = threading.RLock()
+        self.notifiedLock = threading.RLock()
         # TODO: MOAR LOCKS
 
     def setup(self, network, database):
@@ -292,9 +291,6 @@ class ChordLogic(object):
                     self.predecessor = p
                 elif space.isPointBetween(p.loc, self.predecessor.loc, self.loc):
                     self.predecessor = p
-
-    def createDict(self):
-        pass
 
     def onResponsibilityChange(self):
         pass
