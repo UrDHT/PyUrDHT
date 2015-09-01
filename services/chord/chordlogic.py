@@ -87,7 +87,6 @@ class ChordLogic(object):
         """
         if peers:
             print("Joining Network")
-            found_peers = set(peers)
 
             # Assuming we use a bootstrap list,
             # we shouldn't always select the first.
@@ -98,17 +97,17 @@ class ChordLogic(object):
             inital_peers = None
             try:
                 while new_best is None or best_parent.id != new_best.id:
+                    if new_best is not None:
+                        best_parent = new_best
                     new_best = self.network.seek(self.key,
                                                  best_parent, self.info.id)
-                    found_peers.add(new_best)
-                    best_parent = new_best
                 inital_peers = self.network.getSuccessors(self.key, best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
             with self.peersLock:
                 self.succList = [best_parent] + inital_peers[:-1]
-            print("joined with:", list(found_peers))
+            print("joined with:", best_parent)
 
         self.janitorThread.start()
         return True
@@ -128,16 +127,16 @@ class ChordLogic(object):
         best = self.seek(key)
         newBest = None
         requests = 0  # safety feature to guard against possible incompetence
-        while (newBest is None or newBest.loc != best.loc) and requests < 5 * MAX_LONGPEERS:
+        while (newBest is None or newBest.loc != best.loc) and requests < 5 * MAX_LONGPEERS:    
+            if newBest is not None:
+                best = newBest
             try:
-                new_best = self.network.seek(self.key, best_parent, self.info.id)
+                newBest = self.network.seek(self.key, best, self.info.id)
             except:
                 raise DialFailed
             finally:
                 requests += 1
         return  best
-
-
 
     def doIOwn(self, key):
         """
@@ -173,7 +172,7 @@ class ChordLogic(object):
         with self.peersLock:
             candidates = self.succList[:] + self.longPeers[:]
         if len(candidates) == 0:
-            print("Explative Deleted, this node is all alone!")
+            print("Explitive Deleted, this node is all alone!")
             return self.info  # We have issues
         closestPeer = space.getClosest(loc, candidates)
         return closestPeer
@@ -323,5 +322,18 @@ class ChordJanitor(object):
         self.parent.notify()
         self.parent.rectify()
 
-    def updateLongPeers(self):
-        pass
+class ShortcutJanitor():
+    def __init__(self, parent):
+        """
+        Initialized the janitor with parent as the node that created it.
+        """
+        threading.Thread.__init__(self)
+        self.parent = parent
+        self.running = True
+        self.runningLock = threading.Lock()
+
+    def run(self):
+        with self.runningLock:
+            while self.running:
+                self.cleanup()
+                time.sleep(MAINTENANCE_SLEEP_PERIOD/4)
