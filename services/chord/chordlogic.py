@@ -5,6 +5,7 @@ import random
 from chordnetwork import DialFailed
 
 MAX_LONGPEERS = space.KEYSIZE
+MAX_SUCCESSORS = 4  # Number chosen at random, see https://xkcd.com/221/
 MAINTENANCE_SLEEP_PERIOD = 10  # set a periodic sleep of 10s on maintenance
 
 
@@ -125,18 +126,24 @@ class ChordLogic(object):
             return self.succList[0]
 
         best = self.seek(key)
+        providerOfBest = self.info  # The guy who gave me who best currently is 
         newBest = None
         requests = 0  # safety feature to guard against possible incompetence
-        while (newBest is None or newBest.loc != best.loc) and requests < 5 * MAX_LONGPEERS:    
+        while newBest is None or newBest.loc != best.loc:
             if newBest is not None:
+                providerOfBest = best
                 best = newBest
             try:
-                newBest = self.network.seek(self.key, best, self.info.id)
+                newBest = self.network.seek(self.key, best, key)
             except:
-                raise DialFailed
-            finally:
-                requests += 1
-        return  best
+                if best == self.info:
+                    raise DialFailed
+                else:
+                    self.network.removeThisNode(self.key, providerOfBest, best)
+                    best =  providerOfBest
+                    providerOfBest = self.info
+                    newBest = None
+        return best
 
     def doIOwn(self, key):
         """
@@ -145,9 +152,8 @@ class ChordLogic(object):
 
         MUST LOCK THE PREDECESSOR
         """
-        with self.peersLock:
-            point = space.idToPoint(key)
-            return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
+        point = space.idToPoint(key)
+        return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
 
     def doesMySuccessorOwn(self, key):
         """
@@ -155,9 +161,8 @@ class ChordLogic(object):
 
         MUST LOCK THE SUCESSOR
         """
-        with self.peersLock:
-            point = space.idToPoint(key)
-            return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
+        point = space.idToPoint(key)
+        return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
 
     def seek(self, key):  # TODO MAKE SURE THIS ACTUALLY WORKS
         """
@@ -198,6 +203,12 @@ class ChordLogic(object):
             self.notifiedMe.append(origin)
         return True
 
+    def removeThisNode(self, badNode):
+        with peersLock:
+            succList.remove(badNode)
+        with peersLock:
+            longPeers.remove(badNode)
+
     def stabilize(self):
         """
         Stabilize checks the successor's predecessor, predOfSucc.
@@ -219,7 +230,7 @@ class ChordLogic(object):
             # if fail, remove the head of succList and retry the loop
             try:
                 predOfSucc = self.network.getPredecessor(self.key, self.succList[0])
-                newList = newList = self.network.getSuccessors(self.key, self.succList[0])
+                newList  = self.network.getSuccessors(self.key, self.succList[0])
             except DialFailed:  # Our successor is dead
                 if self.succList:
                     with self.peersLock:  # long live the new successor
@@ -236,13 +247,15 @@ class ChordLogic(object):
                 except DialFailed:  # if we can't communicate with predOfSucc
                     with self.peersLock:
                         self.succList = [newSucc] + newList
-                        break
+                    if succList > 
+                    break
                 newSucc = predOfSucc
 
             # update the successor list
             with self.peersLock:
                 self.succList = [newSucc] + newList
-                break
+
+            break
 
     def notify(self):  # if notify fails, ignore and let stabilize handle it
         """
@@ -285,10 +298,12 @@ class ChordLogic(object):
                     self.predecessor = p
                     continue
 
-            with self.peersLock:  # TODO WHERE SHOULD THE LOCK GO?
-                if self.predecessor is None:
+            
+            if self.predecessor is None:
+                with self.peersLock:  
                     self.predecessor = p
-                elif space.isPointBetween(p.loc, self.predecessor.loc, self.loc):
+            elif space.isPointBetween(p.loc, self.predecessor.loc, self.loc):
+                with self.peersLock:  
                     self.predecessor = p
 
     def onResponsibilityChange(self):
