@@ -149,8 +149,6 @@ class ChordLogic(object):
         """
         Looks to see if I own some key.
         If seek returns myself, then I'm the closest
-
-        MUST LOCK THE PREDECESSOR
         """
         point = space.idToPoint(key)
         return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
@@ -158,8 +156,6 @@ class ChordLogic(object):
     def doesMySuccessorOwn(self, key):
         """
         Does my successor own this key
-
-        MUST LOCK THE SUCESSOR
         """
         point = space.idToPoint(key)
         return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
