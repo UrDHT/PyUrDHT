@@ -200,6 +200,9 @@ class ChordLogic(object):
         return True
 
     def removeThisNode(self, badNode):
+        """
+        Blatant security hole
+        """
         with peersLock:
             succList.remove(badNode)
         with peersLock:
