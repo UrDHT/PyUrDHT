@@ -126,9 +126,8 @@ class ChordLogic(object):
             return self.succList[0]
 
         best = self.seek(key)
-        providerOfBest = self.info  # The guy who gave me who best currently is 
+        providerOfBest = self.info  # The guy who gave me who best currently is
         newBest = None
-        requests = 0  # safety feature to guard against possible incompetence
         while newBest is None or newBest.loc != best.loc:
             if newBest is not None:
                 providerOfBest = best
@@ -140,7 +139,7 @@ class ChordLogic(object):
                     raise DialFailed
                 else:
                     self.network.removeThisNode(self.key, providerOfBest, best)
-                    best =  providerOfBest
+                    best = providerOfBest
                     providerOfBest = self.info
                     newBest = None
         return best
@@ -203,10 +202,10 @@ class ChordLogic(object):
         """
         Blatant security hole
         """
-        with peersLock:
-            succList.remove(badNode)
-        with peersLock:
-            longPeers.remove(badNode)
+        with self.peersLock:
+            self.succList.remove(badNode)
+        with self.peersLock:
+            self.longPeers.remove(badNode)
 
     def stabilize(self):
         """
@@ -216,7 +215,6 @@ class ChordLogic(object):
         predOfSucc become the head of the new succList.
 
         Either way, succList is updated
-
         """
 
         while self.succList:    # So long as we have a potential successor
@@ -229,7 +227,7 @@ class ChordLogic(object):
             # if fail, remove the head of succList and retry the loop
             try:
                 predOfSucc = self.network.getPredecessor(self.key, self.succList[0])
-                newList  = self.network.getSuccessors(self.key, self.succList[0])
+                newList = self.network.getSuccessors(self.key, self.succList[0])
             except DialFailed:  # Our successor is dead
                 if self.succList:
                     with self.peersLock:  # long live the new successor
@@ -246,14 +244,18 @@ class ChordLogic(object):
                 except DialFailed:  # if we can't communicate with predOfSucc
                     with self.peersLock:
                         self.succList = [newSucc] + newList
-                    if succList > 
+                    if self.succList > MAX_SUCCESSORS:
+                        with self.peersLock:
+                            self.succList = self.succList[:MAX_SUCCESSORS]
                     break
                 newSucc = predOfSucc
 
             # update the successor list
             with self.peersLock:
                 self.succList = [newSucc] + newList
-
+            if self.succList > MAX_SUCCESSORS:
+                with self.peersLock:
+                    self.succList = self.succList[:MAX_SUCCESSORS]
             break
 
     def notify(self):  # if notify fails, ignore and let stabilize handle it
@@ -297,12 +299,11 @@ class ChordLogic(object):
                     self.predecessor = p
                     continue
 
-            
             if self.predecessor is None:
-                with self.peersLock:  
+                with self.peersLock:
                     self.predecessor = p
             elif space.isPointBetween(p.loc, self.predecessor.loc, self.loc):
-                with self.peersLock:  
+                with self.peersLock:
                     self.predecessor = p
 
     def onResponsibilityChange(self):
@@ -336,6 +337,7 @@ class ChordJanitor(object):
         self.parent.notify()
         self.parent.rectify()
 
+
 class ShortcutJanitor():
     def __init__(self, parent):
         """
@@ -350,4 +352,7 @@ class ShortcutJanitor():
         with self.runningLock:
             while self.running:
                 self.cleanup()
-                time.sleep(MAINTENANCE_SLEEP_PERIOD/4)
+                time.sleep(MAINTENANCE_SLEEP_PERIOD / 4)
+
+    def updateLongpeer(self, index):
+        self.parent.lookup(self.parent.loc)
