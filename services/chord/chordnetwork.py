@@ -49,6 +49,13 @@ class Networking(object):
             raise DialFailed()
         return val
 
+    def seekPoint():
+        pass
+
+
+    def removeThisNode():
+        pass
+
     def getPeers(self, service, remote):
         result = []
         try:
