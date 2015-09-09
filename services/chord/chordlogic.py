@@ -146,7 +146,7 @@ class ChordLogic(object):
         Returns the node I know either responsible for or closest to key
         """
         loc = space.idToPoint(key)
-        return seekPoint(loc)
+        return self.seekPoint(loc)
 
     def seekPoint(self, point):  # TODO MAKE SURE THIS ACTUALLY WORKS
         """
@@ -172,29 +172,8 @@ class ChordLogic(object):
         key:  a multihash key
         returns -> node responsible for key
         """
-        if self.doIOwn(key):
-            return self.info
-        if self.doesMySuccessorOwn(key):
-            return self.succList[0]
-
-        best = self.seek(key)
-        providerOfBest = self.info  # The guy who gave me who best currently is
-        newBest = None
-        while newBest is None or newBest.loc != best.loc:
-            if newBest is not None:
-                providerOfBest = best
-                best = newBest
-            try:
-                newBest = self.network.seek(self.key, best, key)
-            except:
-                if best == self.info:
-                    raise DialFailed
-                else:
-                    self.network.removeThisNode(self.key, providerOfBest, best)
-                    best = providerOfBest
-                    providerOfBest = self.info
-                    newBest = None
-        return best
+        loc = space.idToPoint(key)
+        return self.lookupPoint(loc)
 
     def lookupPoint(self, point):
         """
@@ -216,7 +195,7 @@ class ChordLogic(object):
                 providerOfBest = best
                 best = newBest
             try:
-                newBest = self.network.seek(self.key, best, key)
+                newBest = self.network.seekPoint(self.key, best, point)
             except:
                 if best == self.info:
                     raise DialFailed
