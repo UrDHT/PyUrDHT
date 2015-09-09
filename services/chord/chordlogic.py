@@ -113,6 +113,58 @@ class ChordLogic(object):
         self.janitorThread.start()
         return True
 
+    def doIOwn(self, key):
+        """
+        Looks to see if I own some key.
+        If seek returns myself, then I'm the closest
+        """
+        point = space.idToPoint(key)
+        return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
+
+    def doIOwnPoint(self, point):
+        """
+        Looks to see if I own some point.
+        If seek returns myself, then I'm the closest
+        """
+        return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
+
+    def doesMySuccessorOwn(self, key):
+        """
+        Does my successor own this key
+        """
+        point = space.idToPoint(key)
+        return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
+
+    def doesMySuccessorOwnPoint(self, point):
+        """
+        Does my successor own this point
+        """
+        return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
+
+    def seek(self, key):  # TODO MAKE SURE THIS ACTUALLY WORKS
+        """
+        Returns the node I know either responsible for or closest to key
+        """
+        loc = space.idToPoint(key)
+        return seekPoint(loc)
+
+    def seekPoint(self, point):  # TODO MAKE SURE THIS ACTUALLY WORKS
+        """
+        Returns the node I know either responsible for or closest to key
+        """
+        if self.doIOwnPoint(point):
+            return self.info
+        if self.doesMySuccessorOwnPoint(point):
+            return self.succList[0]
+        candidates = None
+        with self.peersLock:
+            candidates = self.succList[:] + self.longPeers[:]
+        if len(candidates) == 0:
+            print("Explitive Deleted, this node is all alone!")
+            return self.info  # We have issues
+        closestPeer = space.getClosest(point, candidates)
+        return closestPeer
+
     def lookup(self, key):
         """
         Iterative lookup of key
@@ -144,38 +196,36 @@ class ChordLogic(object):
                     newBest = None
         return best
 
-    def doIOwn(self, key):
+    def lookupPoint(self, point):
         """
-        Looks to see if I own some key.
-        If seek returns myself, then I'm the closest
-        """
-        point = space.idToPoint(key)
-        return space.isPointBetweenRightInclusive(point, self.predecessor.loc, self.loc)
+        Iterative lookup of a point
 
-    def doesMySuccessorOwn(self, key):
+        point - an int
+        returns -> node responsible for key
         """
-        Does my successor own this key
-        """
-        point = space.idToPoint(key)
-        return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
-
-    def seek(self, key):  # TODO MAKE SURE THIS ACTUALLY WORKS
-        """
-        Returns the node I know either responsible for or closest to key
-        """
-        if self.doIOwn(key):
+        if self.doIOwnPoint(point):
             return self.info
-        if self.doesMySuccessorOwn(key):
+        if self.doesMySuccessorOwnPoint(point):
             return self.succList[0]
-        loc = space.idToPoint(key)
-        candidates = None
-        with self.peersLock:
-            candidates = self.succList[:] + self.longPeers[:]
-        if len(candidates) == 0:
-            print("Explitive Deleted, this node is all alone!")
-            return self.info  # We have issues
-        closestPeer = space.getClosest(loc, candidates)
-        return closestPeer
+
+        best = self.seekPoint(point)
+        providerOfBest = self.info  # The guy who gave me who best currently is
+        newBest = None
+        while newBest is None or newBest.loc != best.loc:
+            if newBest is not None:
+                providerOfBest = best
+                best = newBest
+            try:
+                newBest = self.network.seek(self.key, best, key)
+            except:
+                if best == self.info:
+                    raise DialFailed
+                else:
+                    self.network.removeThisNode(self.key, providerOfBest, best)
+                    best = providerOfBest
+                    providerOfBest = self.info
+                    newBest = None
+        return best
 
     def getPeers(self):
         """
