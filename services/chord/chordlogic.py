@@ -95,19 +95,28 @@ class ChordLogic(object):
             patron_peer = random.choice(peers)
             best_parent = patron_peer
             new_best = None
-            inital_peers = None
+            parentSuccessors = None
             try:
                 while new_best is None or best_parent.id != new_best.id:
                     if new_best is not None:
                         best_parent = new_best
                     new_best = self.network.seek(self.key,
                                                  best_parent, self.info.id)
-                inital_peers = self.network.getSuccessors(self.key, best_parent)
+                parentSuccessors = self.network.getSuccessors(self.key, best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
                 return self.join(peers)
             with self.peersLock:
-                self.succList = [best_parent] + inital_peers[:-1]
+                self.succList = [best_parent] + parentSuccessors
+
+            # If our successor list is now bigger than the max
+            if self.succList > MAX_SUCCESSORS:
+                with self.peersLock:
+                    self.succList = self.succList[:MAX_SUCCESSORS]
+
+            with self.peersLock:
+                pass  # TODO initialize longPeers
+
             print("joined with:", best_parent)
 
         self.janitorThread.start()
@@ -257,9 +266,9 @@ class ChordLogic(object):
             try:
                 predOfSucc = self.network.getPredecessor(self.key, self.succList[0])
                 newList = self.network.getSuccessors(self.key, self.succList[0])
-            except DialFailed:  # Our successor is dead
+            except DialFailed:  # Our successor is dead ...
                 if self.succList:
-                    with self.peersLock:  # long live the new successor
+                    with self.peersLock:  # ... long live the new successor
                         self.succList = self.succList[1:]
                 continue
 
@@ -273,6 +282,7 @@ class ChordLogic(object):
                 except DialFailed:  # if we can't communicate with predOfSucc
                     with self.peersLock:
                         self.succList = [newSucc] + newList
+                    # If our successor list is now bigger than the max
                     if self.succList > MAX_SUCCESSORS:
                         with self.peersLock:
                             self.succList = self.succList[:MAX_SUCCESSORS]
@@ -379,9 +389,18 @@ class ShortcutJanitor():
 
     def run(self):
         with self.runningLock:
+            index = MAX_LONGPEERS - 1
             while self.running:
-                self.cleanup()
+                self.cleanup(index)
+                index -= 1
+                if index < 0:
+                    index = MAX_LONGPEERS - 1
                 time.sleep(MAINTENANCE_SLEEP_PERIOD / 4)
 
-    def updateLongpeer(self, index):
-        self.parent.lookup(self.parent.loc)
+    def cleanup(self, index):
+        replacementNode = self.findShortcut(index)
+
+    def findShortcut(self, index):
+        target = (self.parent.loc + (2 ** index)) % (2 ** MAX_LONGPEERS)
+        bestShortcut = self.parent.lookupPoint(target)
+        return bestShortcut
