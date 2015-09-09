@@ -50,7 +50,7 @@ class ChordLogic(object):
         self.succList = []
         self.shortPeers = [self.predecessor, self.succList]
         self.longPeers = []
-        self.seekCandidates = []
+        # self.seekCandidates = []
         self.notifiedMe = []
         self.info = peerinfo
         if peerinfo.loc is None:
@@ -167,11 +167,11 @@ class ChordLogic(object):
             return self.succList[0]
         candidates = None
         with self.peersLock:
-            candidates = self.succList[:] + self.longPeers[:]
+            candidates = self.longPeers[:] + self.succList[:]
         if len(candidates) == 0:
             print("Explitive Deleted, this node is all alone!")
             return self.info  # We have issues
-        closestPeer = space.getClosest(point, candidates)
+        closestPeer = space.getClosest(point, list(set(candidates)))
         return closestPeer
 
     def lookup(self, key):
@@ -382,7 +382,7 @@ class ShortcutJanitor():
         """
         Initialized the janitor with parent as the node that created it.
         """
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, parent)
         self.parent = parent
         self.running = True
         self.runningLock = threading.Lock()
@@ -399,6 +399,12 @@ class ShortcutJanitor():
 
     def cleanup(self, index):
         replacementNode = self.findShortcut(index)
+        if len(self.parent.longPeers) == MAX_LONGPEERS:
+            with self.parent.peersLock:
+                self.parent.longPeers[(MAX_LONGPEERS - 1) - index] = replacementNode
+        else:
+            with self.parent.peersLock:
+                self.parent.longPeers.append(replacementNode)
 
     def findShortcut(self, index):
         target = (self.parent.loc + (2 ** index)) % (2 ** MAX_LONGPEERS)

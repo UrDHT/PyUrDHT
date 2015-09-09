@@ -6,9 +6,6 @@ PLEASE READ THE FOLLOWING ASSUMPTIONS
 Chord exists in a 1-d ring
 All functions that do any useful math use the location of the node in this ring
 the location is a base 10 int, not the actual hash
-
-
-
 """
 
 

@@ -2,7 +2,6 @@ trouble spots:
 
 predecessor returns an object and the rest of related peer code returns lists
 
-If nodes disappear from the lists, it's because of the removal clauses in lookup and seek
-
+If nodes disappear from the lists, it's because of the removal clauses in lookup
 
 Assuming successor lists maintain order when being transmitted
