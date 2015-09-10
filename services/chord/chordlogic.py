@@ -59,6 +59,7 @@ class ChordLogic(object):
         else:
             self.loc = peerinfo.loc
         self.janitorThread = None
+        self.shortcutThread = None
         self.peersLock = threading.RLock()
         self.notifiedLock = threading.RLock()
         # TODO: MOAR LOCKS
@@ -70,6 +71,7 @@ class ChordLogic(object):
         self.network = network
         self.database = database
         self.janitorThread = ChordJanitor(self)
+        self.shortcutThread =  ShortcutJanitor(self)
 
     def shutdown(self):
         """
@@ -77,7 +79,10 @@ class ChordLogic(object):
         Returns True when done
         """
         self.janitorThread.running = False
+        self.shortcutThread.running = False
         with self.janitorThread.runningLock:  # sanity check
+            pass
+        with self.shortcutThread.runningLock:
             pass
         return True
 
@@ -120,6 +125,7 @@ class ChordLogic(object):
             print("joined with:", best_parent)
 
         self.janitorThread.start()
+        self.shortcutThread.start()
         return True
 
     def doIOwn(self, key):
@@ -314,6 +320,9 @@ class ChordLogic(object):
 
         If so, they replace our predecessor
 
+
+        TODO: if I'm reading this correctly we will always have a predecessor
+        even if it's dead
         """
 
         candidates = []
@@ -323,6 +332,7 @@ class ChordLogic(object):
             candidates = self.notifiedMe[:]
             self.notifiedMe = []
 
+        predChanged = False
         # try pinging the notifier first, skip if dead
         for p in candidates:
             try:
@@ -336,14 +346,20 @@ class ChordLogic(object):
             except:  # well, we have to replace it now, don't we
                 with self.peersLock:
                     self.predecessor = p
-                    continue
+                predChanged = True
+                continue
 
+            # if my pred is None, replace it
             if self.predecessor is None:
                 with self.peersLock:
                     self.predecessor = p
+                predChanged = True
+            # if my notifier is closer, it's my new pred
             elif space.isPointBetween(p.loc, self.predecessor.loc, self.loc):
                 with self.peersLock:
                     self.predecessor = p
+                predChanged = True
+        return predChanged
 
     def onResponsibilityChange(self):
         # TODO:  refine so we don't have to keep backing up stuff
@@ -356,7 +372,8 @@ class ChordLogic(object):
         with self.peersLock:
             mySuccessors = self.sucessorlist
         
-        # for each key, get the value associated with it and back it up
+        # for each key, get the value associated with it and 
+        # store it at my buddies
         for key in recordKeys:
             value =  self.database.get(key)
             for s in mySuccessors:
@@ -392,7 +409,9 @@ class ChordJanitor(object):
     def cleanup(self):
         self.parent.stablize()
         self.parent.notify()
-        self.parent.rectify()
+        changed = self.parent.rectify()
+        if changed:
+            self.parent.onResponsibilityChange()
 
 
 class ShortcutJanitor():
