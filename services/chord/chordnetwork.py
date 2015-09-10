@@ -49,12 +49,25 @@ class Networking(object):
             raise DialFailed()
         return val
 
-    def seekPoint():
-        pass
+    def seekPoint(self, service, remote, point):
+        path = remote.addr + service + "/peer/" + "seekPoint/%s" % point
+        val = None
+        try:
+            r = requests.get(path)
+            results = r.json()
+            val = util.PeerInfo(results["id"], results["addr"], results["loc"])
+        except Exception:
+            raise DialFailed()
+        return val
 
 
-    def removeThisNode():
-        pass
+    def removeThisNode(self, service, remote, badNode):
+        path = remote.addr + service + "/peer/" + "removeThisNode/%s" % badNode
+        try:
+            r = requests.post(path)
+            return r.status_code == requests.codes.ok
+        except Exception:
+            return False
 
     def getPeers(self, service, remote):
         result = []

@@ -158,6 +158,21 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
                 loc = jsonDict["loc"]
                 myLogic.getNotified(PeerInfo(hashID, addr, loc))
                 self.wfile.write(b"[]")
+            elif None != re.search(k + '/peer/removeThisNode*', self.path):
+                # copied direcly from above clause
+                self.success()
+
+                contentLen = int(self.headers.get_all('content-length')[0])
+                data = self.rfile.read(contentLen)
+
+                jsonDict = json.loads(str(data, "UTF-8"))
+                addr = jsonDict["addr"]
+                hashID = jsonDict["id"]
+                loc = jsonDict["loc"]
+                myLogic.removeThisNode(PeerInfo(hashID, addr, loc))
+
+                self.wfile.write(b"[]")
+
             else:
                 self.failure()
 
