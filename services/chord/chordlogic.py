@@ -66,7 +66,8 @@ class ChordLogic(object):
 
     def setup(self, network, database):
         """
-        Setup just connects Logic to the other components
+        Setup just connects Logic to the other components 
+        and initializes, but doens't start, the janitors
         """
         self.network = network
         self.database = database
@@ -88,33 +89,42 @@ class ChordLogic(object):
 
     def join(self, peers):
         """
-        In this version of join, we are either provided our peers
-        from a lookup operation
+        Using a list of peers, we ask the network to find our successor
+        We connect to them and start the janitors 
         """
+
         if peers:
             print("Joining Network")
 
             # Assuming we use a bootstrap list,
             # we shouldn't always select the first.
             # Bad load balancing karma
-            patron_peer = random.choice(peers)
-            best_parent = patron_peer
-            new_best = None
-            parentSuccessors = None
-            try:
-                while new_best is None or best_parent.id != new_best.id:
-                    if new_best is not None:
-                        best_parent = new_best
-                    new_best = self.network.seek(self.key,
-                                                 best_parent, self.info.id)
-                parentSuccessors = self.network.getSuccessors(self.key, best_parent)
-            except DialFailed:
-                peers.remove(patron_peer)
-                return self.join(peers)
-            with self.peersLock:
-                self.succList = [best_parent] + parentSuccessors
+            patronPeer = random.choice(peers)
 
-            # If our successor list is now bigger than the max
+            # bestParent is the best we found so far,
+            # newBest is the one we've found this round
+            bestParent = patronPeer
+            newBest = None
+            parentSuccessors = None
+            
+            # while it's the first round or we've found something closer   
+            try:
+                while newBest is None or bestParent.id != newBest.id:
+                    # we found something closer, that's now the bestParent
+                    if newBest is not None:
+                        bestParent = newBest
+                    # find next closest node
+                    newBest = self.network.seek(self.key, bestParent, self.info.id)
+                parentSuccessors = self.network.getSuccessors(self.key, bestParent) 
+            except DialFailed: # TODO we could do this more elegantly
+                peers.remove(patronPeer)
+                return self.join(peers)
+
+            # creat the successor list
+            with self.peersLock:
+                self.succList = [bestParent] + parentSuccessors
+
+            # If our successor list is now bigger than the max, trim it
             if self.succList > MAX_SUCCESSORS:
                 with self.peersLock:
                     self.succList = self.succList[:MAX_SUCCESSORS]
@@ -122,7 +132,7 @@ class ChordLogic(object):
             with self.peersLock:
                 pass  # TODO initialize longPeers
 
-            print("joined with:", best_parent)
+            print("joined with:", bestParent)
 
         self.janitorThread.start()
         self.shortcutThread.start()
@@ -156,7 +166,7 @@ class ChordLogic(object):
         """
         return space.isPointBetweenRightInclusive(point, self.loc, self.succList[0].loc)
 
-    def seek(self, key):  # TODO MAKE SURE THIS ACTUALLY WORKS
+    def seek(self, key):
         """
         Returns the node I know either responsible for or closest to key
         """
@@ -177,7 +187,9 @@ class ChordLogic(object):
         if len(candidates) == 0:
             print("Explitive Deleted, this node is all alone!")
             return self.info  # We have issues
-        closestPeer = space.getClosest(point, list(set(candidates)))
+
+        # TODO: if nothing works, look here, also improvement can be done here.
+        closestPeer = space.getClosest(point, list(set(candidates)))  
         return closestPeer
 
     def lookup(self, key):
@@ -202,18 +214,26 @@ class ChordLogic(object):
         if self.doesMySuccessorOwnPoint(point):
             return self.succList[0]
 
+        
+        # run seek on myself
         best = self.seekPoint(point)
+        
         providerOfBest = self.info  # The guy who gave me who best currently is
         newBest = None
+        
         while newBest is None or newBest.loc != best.loc:
             if newBest is not None:
                 providerOfBest = best
                 best = newBest
             try:
                 newBest = self.network.seekPoint(self.key, best, point)
+
+            # if an error, we try to roll it back a single step
+            # if that fails too, we fail completely
             except:
                 if best == self.info:
                     raise DialFailed
+                
                 else:
                     self.network.removeThisNode(self.key, providerOfBest, best)
                     best = providerOfBest
