@@ -67,6 +67,14 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
                 result = myLogic.seek(recordID)
                 answer = bytes(str(result), "UTF-8")
                 self.wfile.write(answer)
+
+            elif None != re.search(k + '/peer/seekPoint/*', self.path):
+                self.success()
+                point = self.path.split('/')[-1]
+                result = myLogic.seekPoint(point)
+                answer = bytes(str(result), "UTF-8")
+                self.wfile.write(answer)
+
             elif None != re.search(k + '/client/get/*', self.path):
                 self.success()
                 recordID = self.path.split('/')[-1]
