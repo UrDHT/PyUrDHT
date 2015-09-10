@@ -346,7 +346,25 @@ class ChordLogic(object):
                     self.predecessor = p
 
     def onResponsibilityChange(self):
-        pass
+        # TODO:  refine so we don't have to keep backing up stuff
+
+        # get the keys I am responsible for
+        recordKeys = list(filter(self.doIOwn, self.database.getRecords()))
+        
+        # get my successors 
+        mySuccessors = []
+        with self.peersLock:
+            mySuccessors = self.sucessorlist
+        
+        # for each key, get the value associated with it and back it up
+        for key in recordKeys:
+            value =  self.database.get(key)
+            for s in mySuccessors:
+                try:
+                    self.network.store(self.key, s, key, value)
+                except Exception as e:
+                    print(e)
+                    continue
 
 
 class ChordJanitor(object):
