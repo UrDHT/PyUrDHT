@@ -13,7 +13,7 @@ import pymultihash as multihash
 
 
 # TODO don't assume max is 160
-KEYSIZE = 160
+KEYSIZE = 256
 MAX = 2 ** KEYSIZE
 
 

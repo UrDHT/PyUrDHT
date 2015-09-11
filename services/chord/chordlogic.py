@@ -4,6 +4,8 @@ import time
 import random
 from chordnetwork import DialFailed
 
+# TODO Remove this node should be a forged notify
+
 MAX_LONGPEERS = space.KEYSIZE
 MAX_SUCCESSORS = 4  # Number chosen at random, see https://xkcd.com/221/
 MAINTENANCE_SLEEP_PERIOD = 10  # set a periodic sleep of 10s on maintenance
@@ -90,7 +92,7 @@ class ChordLogic(object):
     def join(self, peers):
         """
         Using a list of peers, we ask the network to find our successor
-        We connect to them and start the janitors 
+        We connect to them and initialize the janitors 
         """
 
         if peers:
@@ -120,7 +122,7 @@ class ChordLogic(object):
                 peers.remove(patronPeer)
                 return self.join(peers)
 
-            # creat the successor list
+            # create the successor list
             with self.peersLock:
                 self.succList = [bestParent] + parentSuccessors
 
@@ -128,9 +130,6 @@ class ChordLogic(object):
             if self.succList > MAX_SUCCESSORS:
                 with self.peersLock:
                     self.succList = self.succList[:MAX_SUCCESSORS]
-
-            with self.peersLock:
-                pass  # TODO initialize longPeers
 
             print("joined with:", bestParent)
 
@@ -234,7 +233,8 @@ class ChordLogic(object):
                 if best == self.info:
                     raise DialFailed
                 
-                else:
+                else:                    
+                    # TODO THIS STRATEGY WILL STOP WORKING AND NEED A SLEEP IF WE SWITCH TO FORGING NOTIFIES
                     self.network.removeThisNode(self.key, providerOfBest, best)
                     best = providerOfBest
                     providerOfBest = self.info
@@ -268,7 +268,6 @@ class ChordLogic(object):
         """
         with self.peersLock:
             self.succList.remove(badNode)
-        with self.peersLock:
             self.longPeers.remove(badNode)
 
     def stabilize(self):
@@ -281,7 +280,9 @@ class ChordLogic(object):
         Either way, succList is updated
         """
 
-        while self.succList:    # So long as we have a potential successor
+
+
+        while len(self.succList) != 0:    # So long as we have a potential successor
             # initialize the new lists
             newSucc = self.succList[0]
             newList = []
@@ -318,7 +319,7 @@ class ChordLogic(object):
             # update the successor list
             with self.peersLock:
                 self.succList = [newSucc] + newList
-            if self.succList > MAX_SUCCESSORS:
+            if len(self.succList) > MAX_SUCCESSORS:
                 with self.peersLock:
                     self.succList = self.succList[:MAX_SUCCESSORS]
             break
@@ -452,7 +453,7 @@ class ShortcutJanitor():
                 index -= 1
                 if index < 0:
                     index = MAX_LONGPEERS - 1
-                time.sleep(MAINTENANCE_SLEEP_PERIOD / 4)
+                time.sleep(MAINTENANCE_SLEEP_PERIOD / 4.0)
 
     def cleanup(self, index):
         replacementNode = self.findShortcut(index)
