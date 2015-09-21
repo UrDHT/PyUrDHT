@@ -138,9 +138,12 @@ class DHTLogic(object):
             inital_peers = None
             try:
                 while new_best is None or best_parent.id != new_best.id: #comparison on remoteids?
+                    
+                    if new_best is not None:
+                        best_parent = new_best
                     new_best = self.network.seek(self.key,best_parent,self.info.id)
                     found_peers.add(new_best)
-                    best_parent = new_best
+                    
                 inital_peers = self.network.getPeers(self.key,best_parent)
             except DialFailed:
                 peers.remove(patron_peer)
@@ -175,6 +178,8 @@ class DHTLogic(object):
         """
         return self.seek(key) == self.loc
 
+
+    #TODO HAVE WE ACTUALLY TESTED SEEK TO MAKE SURE IF I CALL IT AND I SHOULD BE THE ANSWER, IT COMES BACK WITH ME?
     def seek(self,key):
         """
         Answers the question: of the nodes I know, which is the closest to key?
@@ -222,7 +227,7 @@ class DHTLogic(object):
         lMap = {}
         for l,p in zip(rlocs,records):
             lMap[l]=p
-        canidates = None
+        candidates = None
         with self.peersLock:
             candidates = self.seekCandidates[:]
         if candidates is None:
