@@ -53,7 +53,7 @@ def getDelaunayPeers(candidates, center):
                         if c[0] >= r0[0] and c[0] < r0[1] and len(buckets[r0]) < bucket_size:
                             buckets[r0].append(c)
                         elif c[0] >= r1[0] and c[0] < r1[1] and len(buckets[r1]) < bucket_size:
-                            buckets[r0].append(c)
+                            buckets[r1].append(c)
                         break #we are done
     peers = []
     for k in buckets.keys():
