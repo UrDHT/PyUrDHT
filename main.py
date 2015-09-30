@@ -1,5 +1,6 @@
 import sys
-sys.path = ["./vendored/"]+sys.path
+if "./vendored/" not in sys.path:
+    sys.path = ["./vendored/"]+sys.path
 
 import NetworkClass
 import DataBaseClass
