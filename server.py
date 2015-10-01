@@ -51,6 +51,8 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
             myLogic = myHandlers[k]
 
             #self.wfile.write(b"HTTP/1.1 200 OK\n")
+            if myNetHandlers[k] is not None and myNetHandlers[k](self):
+                return
             if None != re.search(k+'/client/seek/*', self.path):
                 self.success()
                 recordID = self.path.split('/')[-1]
@@ -100,10 +102,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
                 self.success()
                 self.wfile.write(bytes(str(myLogic.info),"UTF-8"))
             else:
-                if myNetHandlers[k] is not None:
-                    myNetHandlers[k](self)
-                else:
-                    self.failure()
+                self.failure()
 
 
     def do_POST(self):

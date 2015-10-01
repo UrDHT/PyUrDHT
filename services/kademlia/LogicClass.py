@@ -70,7 +70,7 @@ DHT logic can be internally separated into two parts:
 """
 
 from util import PeerInfo #might not be needed if all instantiations happen other places
-import HyperbolicSpaceMath as space
+from . import XORSpaceMath as space
 
 import threading
 import queue
@@ -85,7 +85,7 @@ MAX_LONGPEERS = 200
 MIN_SHORTPEERS = 10
 MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
 
-class DHTLogic(object):
+class KADLogic(object):
     def __init__(self, peerInfo, key):
         """Initializes the node with a PeerInfo object"""
         self.network = None
@@ -97,11 +97,8 @@ class DHTLogic(object):
         self.notifiedMe = []
         self.locPeerDict = {}
         self.info = peerInfo
-        if peerInfo.loc is None:
-            self.loc = space.idToPoint(2, self.info.id)
-            self.info.loc = self.loc
-        else:
-            self.loc = peerInfo.loc
+        self.loc = space.idToPoint(2, self.info.id)
+        self.info.loc = self.loc
         self.janitorThread = None
         self.peersLock = threading.Lock()
         self.notifiedLock = threading.Lock()
