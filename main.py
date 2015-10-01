@@ -1,7 +1,13 @@
+import sys
+if "./vendored/" not in sys.path:
+    sys.path = ["./vendored/"]+sys.path
+
 import NetworkClass
 import DataBaseClass
 import LogicClass
 import util
+
+
 from pymultihash import genHash
 
 import json
