@@ -36,8 +36,10 @@ def MyHandler(self):
     if None != re.search('websocket/client/wsinfo*', self.path):
         self.success()
         self.wfile.write(bytes(wsAddr,"UTF-8"))
+        return True
     else:
         self.failure()
+        return False
 
 
 def threadTarget(wsBindAddr,wsBindPort,hostPath):
