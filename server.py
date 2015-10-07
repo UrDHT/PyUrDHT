@@ -47,7 +47,7 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
         Holy boilerplate, Batman!
         """
         k = self.path.split('/')[1]
-        if k in myHandlers.keys():
+        if myHandlers and k in myHandlers.keys():
             myLogic = myHandlers[k]
 
             #self.wfile.write(b"HTTP/1.1 200 OK\n")

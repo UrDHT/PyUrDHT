@@ -1,8 +1,14 @@
+import sys
+if "./vendored/" not in sys.path:
+    sys.path = ["./vendored/"]+sys.path
+
 import NetworkClass
 import DataBaseClass
 import LogicClass
 import util
 from pymultihash import genHash
+
+import UrClientPython as Client
 
 import json
 import random
@@ -16,7 +22,35 @@ import argparse
 
 from importlib.machinery import SourceFileLoader
 
-import UrClientPython3 as client
+
+
+import copy
+
+def config_generator(defaults, ports):
+    for p in ports:
+        d = copy.deepcopy(defaults)
+        d["bindPort"] = p
+        d["publicAddr"] = "http://%s:%d/" % (d["bindAddr"], p)
+        yield d
+
+def fireup_network(ports):
+    default = {
+	"bindAddr":"127.0.0.1",
+	"bindPort":8000,
+	"publicAddr":"http://127.0.0.1:8000/",
+	"loc":"",
+	"services":{}
+    }
+    bootstraps = []
+    output = []
+    for config in config_generator(default, ports):
+        i = UrDHTInstance(config)
+        i.start(bootstraps)
+        bootstraps.append(i.nodeinfo)
+        output.append(i)
+    print("NETWORK LAUNCHED")
+    return output
+
 
 
 class UrDHTInstance(object):
@@ -24,6 +58,8 @@ class UrDHTInstance(object):
         self.process = None
         self.bootstraps = None
         self.config = config
+        self.nodeinfo = {"addr":self.config["publicAddr"], "id": genHash(self.config["publicAddr"],0x12), "loc": (0, 0)}
+        self.Client = Client.UrDHTClient("UrDHT", [self.nodeinfo])
 
     def start(self, bootstraps):
         self.process = Process(target=launch, args=(self.config, bootstraps))
@@ -83,7 +119,7 @@ def launch(config, bootstraps):
     if len(peerPool) > 0:
         strings = map(str,peerPool)
         clientPeers = json.loads("[%s]"%",".join(strings))
-    myClient = client.UrDHTClient("UrDHT",clientPeers)
+    myClient = Client.UrDHTClient("UrDHT",clientPeers)
 
     logic.join(peerPool)
 
@@ -125,3 +161,5 @@ serviceInfo = foo.setup(myPeerInfo)
             new_list = json.loads(old_list)
         new_list.append(json.loads(str(myPeerInfo)))
         myClient.store(k,json.dumps(new_list))
+    while(True):
+        time.sleep(1000000)
