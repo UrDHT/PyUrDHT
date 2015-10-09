@@ -143,6 +143,13 @@ class RESTHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
+from socketserver import ThreadingMixIn
+from http.server import HTTPServer
+
+class ThreadingSimpleServer(ThreadingMixIn, HTTPServer):
+    pass
+
+
 def getThread(ip='0.0.0.0',port=8000):
-    server = http.server.HTTPServer((ip,port), RESTHandler)
+    server = ThreadingSimpleServer((ip,port), RESTHandler)
     return threading.Thread(target=server.serve_forever)

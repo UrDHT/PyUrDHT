@@ -81,9 +81,9 @@ from errors import *
 from threadpool import Threadpool
 
 
-MAX_LONGPEERS = 200
-MIN_SHORTPEERS = 10
-MAINTENANCE_SLEEP_PERIOD = 10 #set a periodic sleep of 10s on maintenance
+MAX_LONGPEERS = 0
+MIN_SHORTPEERS = 3
+MAINTENANCE_SLEEP_PERIOD = 1 #set a periodic sleep of 10s on maintenance
 
 class DHTLogic(object):
     def __init__(self, peerInfo, key):

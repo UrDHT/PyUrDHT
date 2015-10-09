@@ -44,11 +44,12 @@ def fireup_network(ports):
     bootstraps = []
     output = []
     for config in config_generator(default, ports):
+        time.sleep(1)
         i = UrDHTInstance(config)
         i.start(bootstraps)
         bootstraps.append(i.nodeinfo)
         output.append(i)
-    print("NETWORK LAUNCHED")
+    pass #print("NETWORK LAUNCHED")
     return output
 
 
@@ -76,7 +77,7 @@ def launch(config, bootstraps):
 
     loc = None
     if type(config["loc"]) is type([]) and len(config["loc"]) == 2:
-        print("updating loc")
+        pass #print("updating loc")
         loc = tuple(config["loc"])
 
     net = NetworkClass.Networking(ip, port)
@@ -86,7 +87,7 @@ def launch(config, bootstraps):
 
 
     peerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in bootstraps]
-    print(peerPool)
+    pass #print(peerPool)
 
     peerPool = list(filter(lambda x: net.ping("UrDHT",x), peerPool))#filter only living bootstrap peers
 
@@ -123,8 +124,8 @@ def launch(config, bootstraps):
 
     logic.join(peerPool)
 
-    print("Node up and Running")
-    print(logic.info)
+    pass #print("Node up and Running")
+    pass #print(logic.info)
 
     service_ids = config["services"]
     services = {}
@@ -138,7 +139,7 @@ serviceInfo = foo.setup(myPeerInfo)
         exec(command)
         myLogicClass = serviceInfo['LogicClass']
         if(myLogicClass is None):
-            print("Loading default logic class)")
+            pass #print("Loading default logic class)")
             myLogicClass = LogicClass.DHTLogic
 
         services[k] = myLogicClass(myPeerInfo,k)
@@ -147,19 +148,22 @@ serviceInfo = foo.setup(myPeerInfo)
         subnetPeerPool = [myPeerInfo]
         try:
             c = json.loads(myClient.get(k))
-            print(c)
+            pass #print(c)
             if len(c) == 0:
                 raise Exception()
             subnetPeerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in c]
         except:
-            print("Peer discovery for %s failed. May be only peer in subnet" % k)
+            pass #print("Peer discovery for %s failed. May be only peer in subnet" % k)
         services[k].join(subnetPeerPool)
-        #print(subnetPeerPool)
+        #pass #print(subnetPeerPool)
         old_list = myClient.get(k)
         new_list = []
         if(old_list):
             new_list = json.loads(old_list)
         new_list.append(json.loads(str(myPeerInfo)))
-        myClient.store(k,json.dumps(new_list))
-    while(True):
-        time.sleep(1000000)
+        myClient.store(k, json.dumps(new_list))
+    try:
+        while(True):
+            time.sleep(1000000)
+    except:
+        pass
