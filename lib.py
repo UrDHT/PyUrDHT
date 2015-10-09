@@ -46,7 +46,7 @@ def fireup_network(ports):
     bootstraps = []
     output = []
     for config in config_generator(default, ports):
-        time.sleep(1)
+        time.sleep(0.1)
         i = UrDHTInstance(config)
         i.start(bootstraps)
         bootstraps.append(i.nodeinfo)
@@ -131,7 +131,6 @@ def launch(config, bootstraps):
 
     service_ids = config["services"]
     services = {}
-    #time.sleep(5)
     for k in service_ids.keys():
         serviceInfo = None
         new_locals = {"myPeerInfo":myPeerInfo}
@@ -148,20 +147,7 @@ serviceInfo = foo.setup(myPeerInfo)
         services[k] = myLogicClass(myPeerInfo, k)
         net.addHandler(k, services[k], new_locals["serviceInfo"]['NetHandler'])
         services[k].setup(net, data)
-        subnetPeerPool = [myPeerInfo]
-        try:
-            c = myClient.poll(k, 0)
-
-
-            print("JOINPEERS:", c)
-            if len(c) == 0:
-                raise Exception()
-            for r in c:
-                x = json.loads(r[1])
-                subnetPeerPool.append(util.PeerInfo(x["id"],x["addr"],x["loc"]))
-        except Exception as e:
-            print(e)
-            print("Peer discovery for %s failed. May be only peer in subnet" % k)
+        subnetPeerPool = peerPool[:]
         services[k].join(subnetPeerPool)
         #pass #print(subnetPeerPool)
 

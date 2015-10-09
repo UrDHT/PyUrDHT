@@ -1,5 +1,5 @@
 import threading, queue
-
+threading.stack_size(64*1024)
 
 
 class Threadpool(object):

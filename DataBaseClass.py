@@ -12,7 +12,6 @@ import time
 class DataBase(object):
     def __init__(self):
         self.records = {}
-        self.streams = {}
     def setup(self):
         pass
     def shutdown(self):
@@ -27,13 +26,13 @@ class DataBase(object):
 
     def post(self,id, val):
         val = val
-        if id in self.streams.keys():
-            self.streams[id].append((time.time(),val))
+        if id in self.records.keys():
+            self.records[id].append((time.time(),val))
         else:
-            self.streams[id]=[(time.time(),val)]
+            self.records[id]=[(time.time(),val)]
     def poll(self, id, t):
         try:
-            return [x for x in filter(lambda x: x[0]>t,self.streams[id])]
+            return [x for x in filter(lambda x: x[0]>t,self.records[id])]
         except:
             return []
 

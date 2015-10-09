@@ -304,7 +304,7 @@ class DHTJanitor(threading.Thread):
                     if not self.parent.network.ping(self.parent.key,p) == True:
                         peerCandidateSet.remove(p)
                         #print("Ping Failed",p)
-                threads = Threadpool(10)
+                threads = Threadpool(1)
                 for x in threads.map(pingCheck,set(peerCandidateSet)):
                     pass
 

@@ -4,9 +4,15 @@ import networkx as nx
 
 import time
 
+import matplotlib
+
+matplotlib.use('Agg')
+
 from matplotlib import pyplot as plt
 
-nodes = lib.fireup_network(range(55500, 55510))
+
+
+nodes = lib.fireup_network(range(55500, 55550))
 
 G = nx.DiGraph()
 
@@ -16,7 +22,7 @@ G.add_nodes_from(urls)
 
 positions = {}
 
-for i in range(60,0,-1):
+for i in range(30,0,-1):
     print("Counting Down",i)
     time.sleep(1)
 
