@@ -103,7 +103,7 @@ class UrDHTClient(object):
     def get(self,key):
         target_id = self.hash(key)
         target_peer = self.lookup(target_id)
-        result = dial(self.subnet,target_peer,"get",id=target_id)
+        result = dial(self.subnet, target_peer, "get", id=target_id)
         return result
 
     def getPeers(self, peerinfo):

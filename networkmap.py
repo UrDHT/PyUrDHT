@@ -6,7 +6,7 @@ import time
 
 from matplotlib import pyplot as plt
 
-nodes = lib.fireup_network(range(55500, 55550))
+nodes = lib.fireup_network(range(55500, 55510))
 
 G = nx.DiGraph()
 
@@ -29,8 +29,11 @@ for n in nodes:
             if(p["addr"] not in positions.keys()):
                 positions[p["addr"]] = p["loc"]
     except:
-        positions[n.nodeinfo["addr"]] = (1.0,1.0)
+        positions[n.nodeinfo["addr"]] = (1.0, 1.0)
 
-nx.draw(G, pos=positions, labels={x:x for x in urls})
+nx.draw(G, labels={x:x for x in urls})
 
-plt.show()
+plt.savefig("%s.png"%str(time.time()))
+
+for p in nodes:
+    p.kill()

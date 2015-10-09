@@ -39,7 +39,9 @@ def fireup_network(ports):
 	"bindPort":8000,
 	"publicAddr":"http://127.0.0.1:8000/",
 	"loc":"",
-	"services":{}
+	"services":{
+    "kademlia":"kademlia.service"
+    }
     }
     bootstraps = []
     output = []
@@ -60,7 +62,7 @@ class UrDHTInstance(object):
         self.bootstraps = None
         self.config = config
         self.nodeinfo = {"addr":self.config["publicAddr"], "id": genHash(self.config["publicAddr"],0x12), "loc": (0, 0)}
-        self.Client = Client.UrDHTClient("UrDHT", [self.nodeinfo])
+        self.Client = Client.UrDHTClient("kademlia", [self.nodeinfo])
 
     def start(self, bootstraps):
         self.process = Process(target=launch, args=(self.config, bootstraps))
@@ -132,36 +134,39 @@ def launch(config, bootstraps):
     #time.sleep(5)
     for k in service_ids.keys():
         serviceInfo = None
+        new_locals = {"myPeerInfo":myPeerInfo}
         command = """
 import %s as foo
 serviceInfo = foo.setup(myPeerInfo)
 """ % ("services."+service_ids[k])
-        exec(command)
-        myLogicClass = serviceInfo['LogicClass']
+        exec(command, {}, new_locals)
+        myLogicClass = new_locals["serviceInfo"]['LogicClass']
         if(myLogicClass is None):
             pass #print("Loading default logic class)")
             myLogicClass = LogicClass.DHTLogic
 
-        services[k] = myLogicClass(myPeerInfo,k)
-        net.addHandler(k,services[k],serviceInfo['NetHandler'])
-        services[k].setup(net,data)
+        services[k] = myLogicClass(myPeerInfo, k)
+        net.addHandler(k, services[k], new_locals["serviceInfo"]['NetHandler'])
+        services[k].setup(net, data)
         subnetPeerPool = [myPeerInfo]
         try:
-            c = json.loads(myClient.get(k))
-            pass #print(c)
+            c = myClient.poll(k, 0)
+
+
+            print("JOINPEERS:", c)
             if len(c) == 0:
                 raise Exception()
-            subnetPeerPool = [util.PeerInfo(x["id"],x["addr"],x["loc"]) for x in c]
-        except:
-            pass #print("Peer discovery for %s failed. May be only peer in subnet" % k)
+            for r in c:
+                x = json.loads(r[1])
+                subnetPeerPool.append(util.PeerInfo(x["id"],x["addr"],x["loc"]))
+        except Exception as e:
+            print(e)
+            print("Peer discovery for %s failed. May be only peer in subnet" % k)
         services[k].join(subnetPeerPool)
         #pass #print(subnetPeerPool)
-        old_list = myClient.get(k)
-        new_list = []
-        if(old_list):
-            new_list = json.loads(old_list)
-        new_list.append(json.loads(str(myPeerInfo)))
-        myClient.store(k, json.dumps(new_list))
+
+
+        myClient.post(k, str(myPeerInfo))
     try:
         while(True):
             time.sleep(1000000)
