@@ -31,6 +31,9 @@ class DataBase(object):
     def store(self, id, val):
         self.records[id] = val
 
+    def storePiece(self, pieceID, piece):
+        self.records[id] = piece
+
     def post(self, id, val):
         val = val
         if id in self.streams.keys():
@@ -46,3 +49,10 @@ class DataBase(object):
 
     def getRecords(self):
         return self.records.keys()
+
+
+class KeyFile(object):
+
+    def __init__(self, primaryKey):
+        self.key =  primaryKey
+        
