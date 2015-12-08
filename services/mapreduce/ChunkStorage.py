@@ -5,12 +5,16 @@ see: https://github.com/UrDHT/DevelopmentPlan/blob/master/Database.md
 
 """
 
-import time, sys, os.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname("../../vendored/"), os.path.pardir )))
+import time
+import sys
+import os.path
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.dirname("../../vendored/"), os.path.pardir)))
 from vendored import pymultihash as MultiHash
 
-DEFAULT_BLOCK_SIZE = 1024 * 8 # bytes
+DEFAULT_BLOCK_SIZE = 1024 * 8  # bytes
 MAX_BLOCK_SIZE = float("inf")
+DEFAULT_HASH = 0x12  # SHA-256  
 
 
 class DataBase(object):
@@ -60,6 +64,13 @@ class KeyFile(object):
         self.key = primaryKey
         self.chunkKeys = []
 
+    def __str__(self):
+        return str(self.key) + " -- " + str(self.chunkKeys)
+
+    def __iter__(self):
+        return keys
+
+
 
 class Chunk(object):
 
@@ -67,39 +78,44 @@ class Chunk(object):
         self.key = chunkKey
         self.contents = contents
 
-
-
+    def __str__(self):
+        return self.contents
 
 def makeChunks(filename, chunkGenerator):
-    primaryKey =  MultiHash.genHash(filename , 0x12)
+    primaryKey = MultiHash.genHash(filename, DEFAULT_HASH)
     keyfile = KeyFile(primaryKey)
     chunks = []
     for chunk in chunkGenerator(filename):
-        keyFile.chunkKeys.append(chunk.key)
+        keyfile.chunkKeys.append(chunk.key)
         chunks.append(chunk)
     return (keyfile, chunks)
-        
-def dumbChunk(filename):
+
+
+def dumbChunkGenerator(filename):
     # Creates ONE chunk of all the data
     raw = ""
-    with open(filename,'r') as fin:
+    with open(filename, 'r') as fin:
         raw = fin.read()
-    
-    fileKey =  MultiHash.genHash(filename, 0x12)
-    contentKey = MultiHash.genHash(raw, 0x12)
-    print(fileKey)
-    print(contentKey)
-    
+
+    contentKey = MultiHash.genHash(raw, DEFAULT_HASH)
+    chunk = Chunk(contentKey, raw)
+    yield chunk
+
+
+def asciifilter(text):
+    return ''.join([i if ord(i) < 128 else '' for i in text])
+
 def textChunkGenerator(filename):
-    pass
-    
-    
-    
+
+    with open(filename, 'r') as fin:
+        for block in iter(lambda: fin.read(DEFAULT_BLOCK_SIZE) ,''):
+            contentKey =  MultiHash.genHash(block, DEFAULT_HASH)
+            chunk = Chunk(contentKey, block)
+            yield chunk
+
+
 def test():
-    dumbChunk("hamlet.txt")
+    x,y = makeChunks("hamlet.txt", textChunkGenerator)
 
-
-
-    
-if __name__ ==  '__main__':
+if __name__ == '__main__':
     test()
