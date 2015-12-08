@@ -6,13 +6,9 @@ see: https://github.com/UrDHT/DevelopmentPlan/blob/master/Database.md
 """
 
 import time
-import sys
-import os.path
-sys.path.append(os.path.abspath(
-    os.path.join(os.path.dirname("../../vendored/"), os.path.pardir)))
-from vendored import pymultihash as MultiHash
 
-DEFAULT_BLOCK_SIZE = 1024 * 8  # bytes
+
+DEFAULT_BLOCK_SIZE = 1024 * 8  # 8 kbytes
 MAX_BLOCK_SIZE = float("inf")
 DEFAULT_HASH = 0x12  # SHA-256  
 
@@ -38,8 +34,8 @@ class DataBase(object):
     def store(self, id, val):
         self.records[id] = val
 
-    def storePiece(self, pieceID, piece):
-        self.records[id] = piece
+    def store(self, pieceID, piece):
+        self.records[pieceID] = piece
 
     def post(self, id, val):
         val = val
@@ -69,8 +65,6 @@ class KeyFile(object):
 
     def __iter__(self):
         return keys
-
-
 
 class Chunk(object):
 
@@ -102,9 +96,6 @@ def dumbChunkGenerator(filename):
     yield chunk
 
 
-def asciifilter(text):
-    return ''.join([i if ord(i) < 128 else '' for i in text])
-
 def textChunkGenerator(filename):
 
     with open(filename, 'r') as fin:
@@ -116,6 +107,13 @@ def textChunkGenerator(filename):
 
 def test():
     x,y = makeChunks("hamlet.txt", textChunkGenerator)
+    print(x)
 
 if __name__ == '__main__':
+    import sys
+    import os.path
+    sys.path.append(os.path.abspath(
+        os.path.join(os.path.dirname("../../vendored/"), os.path.pardir)))
+    from vendored import pymultihash as MultiHash
+
     test()
