@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>UrDHT WebUI</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="Codeply">
+
+
+
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body >
+    <nav class="navbar navbar-fixed-top navbar-dark bg-primary">
+    <button class="navbar-toggler hidden-sm-up pull-right" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
+        ☰
+    </button>
+    <a class="navbar-brand" href="#">Navbar</a>
+</nav>
+<div class="container-fluid" id="main">
+    <div class="row row-offcanvas row-offcanvas-left">
+        <div class="col-md-3 col-lg-2 sidebar-offcanvas" id="sidebar" role="navigation">
+            <ul class="nav nav-pills nav-stacked">
+                <li class="nav-item"><a class="nav-link" href="#">UrDHT</a></li>
+            </ul>
+        </div>
+        <!--/col-->
+    </div>
+
+
+    <table data-toggle="table" data-url="/UrDHT/peer/getPeers/">
+        <thead>
+            <tr>
+                <th data-field="id">Item ID</th>
+                <th data-field="addr">Address</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+    <!--scripts loaded here-->
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/scripts.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="css/bootstrap-table.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="js/bootstrap-table.min.js"></script>
+
+
+  </body>
+</html>
