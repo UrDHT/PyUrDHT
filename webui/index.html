@@ -10,40 +10,47 @@
 
 
     <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css" />
 
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body >
-    <nav class="navbar navbar-fixed-top navbar-dark bg-primary">
-    <button class="navbar-toggler hidden-sm-up pull-right" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
-        ☰
-    </button>
-    <a class="navbar-brand" href="#">Navbar</a>
-</nav>
-<div class="container-fluid" id="main">
-    <div class="row row-offcanvas row-offcanvas-left">
-        <div class="col-md-3 col-lg-2 sidebar-offcanvas" id="sidebar" role="navigation">
-            <ul class="nav nav-pills nav-stacked">
-                <li class="nav-item"><a class="nav-link" href="#">UrDHT</a></li>
-            </ul>
-        </div>
-        <!--/col-->
+
+<div class="container" id="main">
+<div class="row">
+    <div class="col-xs-6 ">
+    <div class="panel panel-default">
+      <div class="panel-heading">Node Info</div>
+      <div class="panel-body">
+    Hashid:<div id="nodeinfo_id"></div><br>
+    Address:<div id="nodeinfo_addr"></div><br>
+    Location:<div id="nodeinfo_loc"></div><br>
     </div>
-
-
-    <table data-toggle="table" data-url="/UrDHT/peer/getPeers/">
+  </div>
+</div>
+</div>
+<div class="row">
+    <div class="col-xl-6 ">
+      <div class="panel panel-default">
+      <div class="panel-heading">Peers <button class="btn btn-default" id="reloadPeers" type="button">Reload</button></div>
+      <div class="panel-body">
+    <table id="peerTable" data-toggle="table" data-url="/UrDHT/peer/getPeers/">
         <thead>
             <tr>
-                <th data-field="id">Item ID</th>
+                <th data-field="id">Hash ID</th>
                 <th data-field="addr">Address</th>
+                <th data-field="loc">Location</th>
             </tr>
         </thead>
     </table>
+  </div>
+</div>
+  </div>
 </div>
 
     <!--scripts loaded here-->
 
-    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-2.1.4.js"></script>
     <script src="js/bootstrap.min.js"></script>
 
     <script src="js/scripts.js"></script>
@@ -53,6 +60,19 @@
 
     <!-- Latest compiled and minified JavaScript -->
     <script src="js/bootstrap-table.min.js"></script>
+
+    <script>
+      $.getJSON("/UrDHT/peer/info",function(data){
+        $("#nodeinfo_id").text(data["id"]);
+        $("#nodeinfo_addr").text(data["addr"]);
+        $("#nodeinfo_loc").text(data["loc"]);
+      })
+
+      $('#reloadPeers').click(function () {
+        $('#peerTable').bootstrapTable('refresh', {url: '/UrDHT/peer/getPeers/'});
+      })
+
+    </script>
 
 
   </body>
