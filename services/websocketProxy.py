@@ -46,7 +46,7 @@ def threadTarget(wsBindAddr,wsBindPort,hostPath):
     import asyncio
     from . import websockets
     import json
-    from . import myrequests as requests
+    import myrequests as requests
 
     def wsResolve(path):
         newpath = ''.join((path,"websocket/client/wsinfo"))
