@@ -125,12 +125,17 @@ class DHTLogic(object):
         join joins the network which peers is on.
         We use a random peer from peers to seek for the node currently resonsible for my id
         """
+
         if peers:
             print("Joining Network")
             found_peers = set(peers)
             # Assuming we use a bootstrap list,
             # we shouldn't always select the first.
             # Bad load balancing karma
+
+            #go ahead and populate the locPeerDict (see bug #77)
+            with self.peersLock:
+                self.locPeerDict = {x.loc:x for x in found_peers }
 
             patron_peer = random.choice(peers)
             best_parent = patron_peer
