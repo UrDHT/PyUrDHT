@@ -71,11 +71,27 @@ if __name__=="__main__":
         random_peer = random.choice(peerPool)
         pubip = net.getIP("UrDHT",random_peer)
         path = "http://%s:%d/" % (pubip, port)
-    else:
+    elif len(path) != 0:#make sure there is a path
         if path[-1] != "/":
             path += "/"
-        if path[0:4] != "http":
+        if path[0:7] != "http://":#need to remeber this if we add more protocols
             path = "http://"+ path
+    else:
+        print("""
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+You have left the publicAddr property in config.json empty and there are no
+bootstraps to discover your external IP address for you.
+You either:
+    - Did not provide bootstraps
+    - Cannot connect to any bootstraps (either they are offline or you are)
+
+To fix this:
+    - Figure out your external IP and provide it in config.json
+    - If you are testing, you can use localhost as your ip
+    - Make sure your internet is working
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+""")
+        sys.exit()
 
 
     hashid = genHash(path,0x12)
